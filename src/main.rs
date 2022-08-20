@@ -6,6 +6,11 @@ use bevy::{
     prelude::*,
     utils::HashSet,
 };
+use bevy_mod_raycast::{
+    DefaultPluginState, DefaultRaycastingPlugin, RayCastMesh, RayCastMethod, RayCastSource,
+    RaycastSystem, SimplifiedMesh,
+};
+use bevy_obj::ObjPlugin;
 
 fn startup(mut commands: Commands, assets: Res<AssetServer>) {
     setup_camera(&mut commands);
@@ -15,11 +20,15 @@ fn startup(mut commands: Commands, assets: Res<AssetServer>) {
 }
 
 fn setup_camera(commands: &mut Commands) {
-    commands.spawn().insert_bundle(Camera3dBundle {
-        transform: Transform::from_translation((10.0, 10.0, 10.0).into())
-            .looking_at((0.0, 0.0, 0.0).into(), (0.0, 0.0, 1.0).into()),
-        ..Default::default()
-    });
+    commands.insert_resource(DefaultPluginState::<BlockRaycastSet>::default().with_debug_cursor());
+    commands
+        .spawn()
+        .insert_bundle(Camera3dBundle {
+            transform: Transform::from_translation((10.0, 10.0, 10.0).into())
+                .looking_at((0.0, 0.0, 0.0).into(), (0.0, 0.0, 1.0).into()),
+            ..Default::default()
+        })
+        .insert(RayCastSource::<BlockRaycastSet>::default());
 }
 
 fn setup_light(commands: &mut Commands) {
@@ -113,6 +122,7 @@ fn move_camera(camera_transform: &mut Transform, movement_keys: [bool; 4], time:
 }
 
 enum BlockKind {
+    DecoStructure,
     Structure,
     Activator,
     TractorBeamSource,
@@ -123,6 +133,7 @@ enum BlockKind {
 impl BlockKind {
     pub fn asset_name(&self) -> &'static str {
         match self {
+            Self::DecoStructure => "blocks/deco_structure.glb#Scene0",
             Self::Structure => "blocks/structure.glb#Scene0",
             Self::Activator => "blocks/activator.glb#Scene0",
             Self::TractorBeamSource => "blocks/tractor_beam_source.glb#Scene0",
@@ -181,6 +192,7 @@ impl Structure {
 }
 
 fn spawn_block(commands: &mut Commands, block: &Block, assets: &AssetServer) -> Entity {
+    let bbox = assets.load::<Mesh, _>("blocks/bounding_box.obj");
     let scene = assets.load(block.kind.asset_name());
     commands
         .spawn()
@@ -194,6 +206,9 @@ fn spawn_block(commands: &mut Commands, block: &Block, assets: &AssetServer) -> 
             .with_rotation(block.facing.rotation()),
             ..Default::default()
         })
+        // This will not be rendered since there is no material attached.
+        .insert(bbox)
+        .insert(RayCastMesh::<BlockRaycastSet>::default())
         .id()
 }
 
@@ -302,10 +317,30 @@ impl World {
     }
 }
 
+#[derive(Component)]
+struct BlockRaycastSet;
+
+fn update_raycast_position_from_cursor(
+    mut events: EventReader<CursorMoved>,
+    mut source: Query<&mut RayCastSource<BlockRaycastSet>>,
+) {
+    if let Some(event) = events.iter().last() {
+        if let Ok(mut source) = source.get_single_mut() {
+            source.cast_method = RayCastMethod::Screenspace(event.position);
+        }
+    }
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_plugin(ObjPlugin)
+        .add_plugin(DefaultRaycastingPlugin::<BlockRaycastSet>::default())
         .add_startup_system(startup)
         .add_system(interface_sys)
+        .add_system_to_stage(
+            CoreStage::First,
+            update_raycast_position_from_cursor.before(RaycastSystem::BuildRays::<BlockRaycastSet>),
+        )
         .run();
 }
