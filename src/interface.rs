@@ -1,18 +1,13 @@
-use std::f32::consts::TAU;
-
 use bevy::{
     input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ButtonState},
     prelude::*,
-    utils::HashSet,
 };
-use bevy_mod_raycast::{
-    DefaultRaycastingPlugin, Intersection, RayCastMesh, RayCastMethod, RayCastSource,
-    RaycastSystem,
+use bevy_mod_raycast::Intersection;
+
+use crate::{
+    block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
+    world::{Position, World},
 };
-use bevy_obj::ObjPlugin;
-
-use crate::{block::{BlockKind, BlockFacing, BlockRaycastSet, Block}, world::{Position, World}};
-
 
 #[derive(Component)]
 pub struct Cursor;
@@ -143,7 +138,7 @@ fn handle_mouse_events(
 ) {
     for event in mouse_button_events.iter() {
         if event.button == MouseButton::Left && event.state == ButtonState::Released {
-            if let (Some(block_to_place)) = (state.block_to_place) {
+            if let Some(block_to_place) = state.block_to_place {
                 // let (above_cursor, _) = get_mouse_position_in_world(intersection);
                 place_block(
                     block_to_place,

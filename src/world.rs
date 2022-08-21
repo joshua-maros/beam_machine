@@ -1,17 +1,9 @@
-use std::f32::consts::TAU;
+use bevy::{prelude::*, utils::HashSet};
 
-use bevy::{
-    input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ButtonState},
-    prelude::*,
-    utils::HashSet,
+use crate::{
+    block::{Block, BlockFacing, BlockKind},
+    structure::{spawn_structure, Structure},
 };
-use bevy_mod_raycast::{
-    DefaultRaycastingPlugin, Intersection, RayCastMesh, RayCastMethod, RayCastSource,
-    RaycastSystem,
-};
-use bevy_obj::ObjPlugin;
-
-use crate::{structure::{spawn_structure, Structure}, block::{Block, BlockKind, BlockFacing}};
 
 pub type Position = (i32, i32, i32);
 
