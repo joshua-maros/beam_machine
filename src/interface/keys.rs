@@ -1,12 +1,9 @@
 use bevy::{
-    input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ButtonState},
+    input::{keyboard::KeyboardInput, ButtonState},
     prelude::*,
 };
 
-use crate::{
-    block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
-    world::{Position, World},
-};
+use crate::block::{BlockFacing, BlockKind};
 
 use super::{util::directional_key_index, InterfaceState};
 
@@ -44,11 +41,7 @@ pub(super) fn update_block_keys(event: &KeyboardInput, state: &mut InterfaceStat
     }
 }
 
-pub(super) fn move_camera(
-    camera_transform: &mut Transform,
-    movement_keys: [bool; 4],
-    time: &Time,
-) {
+pub(super) fn move_camera(camera_transform: &mut Transform, movement_keys: [bool; 4], time: &Time) {
     let mut total_offset = Vec2::ZERO;
     let offsets = [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)];
     for (&active, key_offset) in movement_keys.iter().zip(offsets.into_iter()) {

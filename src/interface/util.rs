@@ -1,13 +1,7 @@
-use bevy::{
-    input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ButtonState},
-    prelude::*,
-};
+use bevy::{input::keyboard::KeyboardInput, prelude::*};
 use bevy_mod_raycast::Intersection;
 
-use crate::{
-    block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
-    world::{Position, World},
-};
+use crate::{block::BlockRaycastSet, world::Position};
 
 fn world_to_block_pos(world: Vec3) -> Position {
     (
