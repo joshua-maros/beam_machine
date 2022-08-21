@@ -1,9 +1,7 @@
+pub mod setup;
 use bevy::{prelude::*, utils::HashSet};
 
-use crate::{
-    block::{Block, BlockFacing, BlockKind},
-    structure::{spawn_structure, Structure},
-};
+use crate::structure::{spawn_structure, Structure};
 
 pub type Position = (i32, i32, i32);
 
@@ -96,27 +94,4 @@ impl World {
         Self::update_part(part.1, &part.0, commands, assets);
         self.debug_assert_invariants();
     }
-}
-
-pub fn setup_world(commands: &mut Commands, assets: &AssetServer) {
-    let factory_floor = create_factory_floor();
-    let mut world = World::new(factory_floor, commands, assets);
-    let blank_structure = Structure { blocks: Vec::new() };
-    world.add_machine_part(blank_structure, commands, assets);
-    commands.insert_resource(world);
-}
-
-fn create_factory_floor() -> Structure {
-    let mut factory_floor = Structure { blocks: Vec::new() };
-    let size = 20;
-    for x in -size..=size {
-        for y in -size..=size {
-            factory_floor.blocks.push(Block {
-                kind: BlockKind::DecoStructure,
-                facing: BlockFacing::Pz,
-                position: (x, y, -1),
-            });
-        }
-    }
-    factory_floor
 }
