@@ -1,7 +1,10 @@
 use bevy::{prelude::*, utils::HashSet};
 use bevy_mod_raycast::RayCastMesh;
 
-use crate::block::{Block, BlockRaycastSet};
+use crate::{
+    block::{Block, BlockRaycastSet},
+    world::Position,
+};
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Structure {
@@ -17,6 +20,14 @@ impl Structure {
                 "Structure contains overlapping blocks!"
             );
             positions.insert(block.position);
+        }
+    }
+
+    pub fn translate(&mut self, offset: Position) {
+        for block in &mut self.blocks {
+            block.position.0 += offset.0;
+            block.position.1 += offset.1;
+            block.position.2 += offset.2;
         }
     }
 }

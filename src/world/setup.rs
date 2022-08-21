@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::base::World;
+use super::{base::World, WorldSnapshot};
 use crate::{
     block::{Block, BlockFacing, BlockKind},
     structure::Structure,
@@ -10,7 +10,8 @@ pub fn setup_world(commands: &mut Commands, assets: &AssetServer) {
     let factory_floor = create_factory_floor();
     let mut world = World::new(factory_floor, commands, assets);
     let blank_structure = Structure { blocks: Vec::new() };
-    world.add_machine_part(blank_structure, commands, assets);
+    world.add_part(blank_structure, commands, assets);
+    commands.insert_resource(WorldSnapshot(world.clone()));
     commands.insert_resource(world);
 }
 

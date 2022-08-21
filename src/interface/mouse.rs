@@ -4,12 +4,11 @@ use bevy::{
 };
 use bevy_mod_raycast::Intersection;
 
+use super::{util::get_mouse_position_in_world, Cursor, InterfaceState};
 use crate::{
     block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
     world::{Position, World},
 };
-
-use super::{util::get_mouse_position_in_world, Cursor, InterfaceState};
 
 pub(super) fn handle_mouse(
     cursor: &mut Query<(&mut Transform, &mut Visibility), (With<Cursor>, Without<Camera3d>)>,
@@ -54,7 +53,6 @@ fn handle_mouse_events(
     for event in mouse_button_events.iter() {
         if event.button == MouseButton::Left && event.state == ButtonState::Released {
             if let Some(block_to_place) = state.block_to_place {
-                // let (above_cursor, _) = get_mouse_position_in_world(intersection);
                 place_block(
                     block_to_place,
                     state.facing,
@@ -79,8 +77,8 @@ fn place_block(
     commands: &mut Commands,
     assets: &AssetServer,
 ) {
-    world.modify_machine_part(
-        0,
+    world.modify_part(
+        1,
         |part| {
             part.blocks.push(Block {
                 facing,

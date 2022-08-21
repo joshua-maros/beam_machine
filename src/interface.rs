@@ -4,19 +4,21 @@ mod mouse;
 pub mod setup;
 mod util;
 
+pub use base::*;
 use bevy::{
     input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ButtonState},
     prelude::*,
 };
 use bevy_mod_raycast::Intersection;
 
-use crate::{block::BlockRaycastSet, world::World};
-
-pub use base::*;
-
 use self::{
     keys::{move_camera, update_block_keys, update_directional_key},
     mouse::handle_mouse,
+};
+use crate::{
+    block::BlockRaycastSet,
+    simulation::{self, SimulationState},
+    world::{World, WorldSnapshot},
 };
 
 pub fn interface_system(
@@ -55,4 +57,38 @@ pub fn interface_system(
 
     let (mut camera_transform,) = camera.get_single_mut().unwrap();
     move_camera(&mut *camera_transform, state.movement_keys, &*time);
+}
+
+pub fn simulation_interface_system(
+    mut commands: Commands,
+    mut key_events: EventReader<KeyboardInput>,
+    mut simulation_state: ResMut<SimulationState>,
+    mut world: ResMut<World>,
+    mut snapshot: ResMut<WorldSnapshot>,
+    assets: Res<AssetServer>,
+) {
+    for event in key_events.iter() {
+        if event.key_code == Some(KeyCode::Space) && event.state == ButtonState::Pressed {
+            if simulation_state.is_started() {
+                simulation::end_simulation(
+                    &mut *world,
+                    &mut *snapshot,
+                    &mut *simulation_state,
+                    &mut commands,
+                    &*assets,
+                );
+            } else {
+                simulation::begin_simulation(&mut *world, &mut *snapshot, &mut *simulation_state);
+            }
+        }
+    }
+}
+
+pub struct InterfacePlugin;
+
+impl Plugin for InterfacePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system(interface_system)
+            .add_system(simulation_interface_system);
+    }
 }
