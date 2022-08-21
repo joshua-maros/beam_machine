@@ -3,6 +3,7 @@ use bevy_mod_raycast::RayCastMesh;
 
 use crate::block::{Block, BlockRaycastSet};
 
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Structure {
     pub blocks: Vec<Block>,
 }

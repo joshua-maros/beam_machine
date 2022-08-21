@@ -1,11 +1,10 @@
 use bevy::prelude::*;
 
+use super::base::World;
 use crate::{
     block::{Block, BlockFacing, BlockKind},
     structure::Structure,
 };
-
-use super::World;
 
 pub fn setup_world(commands: &mut Commands, assets: &AssetServer) {
     let factory_floor = create_factory_floor();

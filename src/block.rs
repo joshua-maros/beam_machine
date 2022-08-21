@@ -52,6 +52,7 @@ impl BlockFacing {
     }
 }
 
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Block {
     pub kind: BlockKind,
     pub facing: BlockFacing,
