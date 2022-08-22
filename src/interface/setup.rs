@@ -1,12 +1,20 @@
 use bevy::prelude::*;
 
-use crate::block::BlockFacing;
-
 use super::{Cursor, InterfaceMode, InterfaceState};
+use crate::block::BlockFacing;
 
 pub fn setup_interface_state(commands: &mut Commands, assets: &AssetServer) {
     let scene = assets.load("blocks/cursor.glb#Scene0");
-    let cursor = commands
+    let place_cursor = commands
+        .spawn()
+        .insert_bundle(SceneBundle {
+            scene,
+            ..Default::default()
+        })
+        .insert(Cursor)
+        .id();
+    let scene = assets.load("blocks/remove_cursor.glb#Scene0");
+    let remove_cursor = commands
         .spawn()
         .insert_bundle(SceneBundle {
             scene,
@@ -20,6 +28,7 @@ pub fn setup_interface_state(commands: &mut Commands, assets: &AssetServer) {
         block_to_place: None,
         facing: BlockFacing::Px,
         holding_shift: false,
-        cursor,
+        place_cursor,
+        remove_cursor,
     });
 }

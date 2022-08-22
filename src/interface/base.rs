@@ -15,5 +15,6 @@ pub struct InterfaceState {
     pub block_to_place: Option<BlockKind>,
     pub facing: BlockFacing,
     pub holding_shift: bool,
-    pub cursor: Entity,
+    pub place_cursor: Entity,
+    pub remove_cursor: Entity,
 }

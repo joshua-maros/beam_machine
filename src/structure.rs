@@ -30,6 +30,16 @@ impl Structure {
             block.position.2 += offset.2;
         }
     }
+
+    pub fn remove_blocks_at(&mut self, position: Position) {
+        self.debug_assert_invariants();
+        for i in 0..self.blocks.len() {
+            if self.blocks[i].position == position {
+                self.blocks.remove(i);
+                return;
+            }
+        }
+    }
 }
 
 fn spawn_block(commands: &mut Commands, block: &Block, assets: &AssetServer) -> Entity {
