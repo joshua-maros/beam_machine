@@ -39,6 +39,32 @@ pub enum BlockFacing {
 }
 
 impl BlockFacing {
+    pub fn all() -> [Self; 6] {
+        [Self::Nz, Self::Pz, Self::Px, Self::Py, Self::Nx, Self::Ny]
+    }
+
+    pub fn offset(&self) -> Position {
+        match self {
+            Self::Px => (1, 0, 0),
+            Self::Py => (0, 1, 0),
+            Self::Nx => (-1, 0, 0),
+            Self::Ny => (0, -1, 0),
+            Self::Pz => (0, 0, 1),
+            Self::Nz => (1, 0, -1),
+        }
+    }
+
+    pub fn reverse(&self) -> Self {
+        match self {
+            Self::Px => Self::Nx,
+            Self::Nx => Self::Px,
+            Self::Py => Self::Ny,
+            Self::Ny => Self::Py,
+            Self::Pz => Self::Nz,
+            Self::Nz => Self::Pz,
+        }
+    }
+
     pub fn rotation(&self) -> Quat {
         let t4 = TAU / 4.0;
         match self {
