@@ -26,6 +26,10 @@ fn setup_camera(commands: &mut Commands) {
 fn setup_light(commands: &mut Commands) {
     let tau8 = TAU / 8.0;
     commands.spawn().insert_bundle(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            shadows_enabled: true,
+            ..Default::default()
+        },
         transform: Transform::from_rotation(Quat::from_euler(EulerRot::ZYX, tau8, 0.0, tau8)),
         ..Default::default()
     });

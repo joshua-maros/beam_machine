@@ -1,4 +1,4 @@
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{pbr::NotShadowCaster, prelude::*, utils::HashSet};
 use bevy_mod_raycast::RayCastMesh;
 
 use crate::{
@@ -60,6 +60,7 @@ fn spawn_block(commands: &mut Commands, block: &Block, assets: &AssetServer) -> 
         // This will not be rendered since there is no material attached.
         .insert(bbox)
         .insert(RayCastMesh::<BlockRaycastSet>::default())
+        .insert(NotShadowCaster)
         .id()
 }
 
