@@ -8,6 +8,7 @@ use crate::world::Position;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BlockKind {
     DecoStructure,
+    DecoStructure2,
     Structure,
     Activator,
     TractorBeamSource,
@@ -19,6 +20,7 @@ impl BlockKind {
     pub fn asset_name(&self) -> &'static str {
         match self {
             Self::DecoStructure => "blocks/deco_structure.glb#Scene0",
+            Self::DecoStructure2 => "blocks/deco_structure_2.glb#Scene0",
             Self::Structure => "blocks/structure.glb#Scene0",
             Self::Activator => "blocks/activator.glb#Scene0",
             Self::TractorBeamSource => "blocks/tractor_beam_source.glb#Scene0",
@@ -78,7 +80,7 @@ impl BlockFacing {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct Block {
     pub kind: BlockKind,
     pub facing: BlockFacing,

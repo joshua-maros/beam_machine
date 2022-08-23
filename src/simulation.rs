@@ -4,6 +4,7 @@ use bevy::{prelude::*, utils::HashSet};
 
 use crate::{
     block::{Block, BlockFacing, BlockKind},
+    structure::Structure,
     world::{Part, Position, World, WorldSnapshot},
 };
 
@@ -58,7 +59,12 @@ pub fn end_simulation(
 }
 
 fn any_other_part_contains_block_at(parts: &[Part], exclude: usize, at_position: Position) -> bool {
-    for part in parts[..exclude].iter().chain(parts[exclude + 1..].iter()) {
+    let parts: Box<dyn Iterator<Item = &Part>> = if exclude < parts.len() {
+        Box::new(parts[..exclude].iter().chain(parts[exclude + 1..].iter()))
+    } else {
+        Box::new(parts.iter())
+    };
+    for part in parts {
         if part
             .0
             .blocks
@@ -105,20 +111,30 @@ fn part_touches(parts: &[Part], part: usize, in_direction: BlockFacing) -> HashS
     included_parts
 }
 
-#[derive(Clone, Debug)]
-struct CanMove {
-    can_move: bool,
-    other_moved_parts: Vec<usize>,
-}
-
 #[derive(Clone, Copy, Debug)]
 struct PhysicsState {
     can_move: [bool; 6],
     farthest_tractor_beam: [(i32, usize); 6],
 }
 
+#[derive(Clone, Debug, Component)]
+pub struct Spawner {
+    spawns: Structure,
+}
+
+pub fn make_spawner(
+    spawns: Structure,
+    world: &mut World,
+    commands: &mut Commands,
+    assets: &AssetServer,
+) {
+    world.add_part(spawns.clone(), commands, assets);
+    commands.spawn().insert(Spawner { spawns });
+}
+
 fn run_simulation(
     mut commands: Commands,
+    spawners: Query<&Spawner>,
     mut world: ResMut<World>,
     mut state: ResMut<SimulationState>,
     time: Res<Time>,
@@ -199,6 +215,15 @@ fn run_simulation(
                 }
                 break;
             }
+        }
+    }
+    for spawner in spawners.iter() {
+        let mut blocks = spawner.spawns.blocks.iter();
+        let parts = world.parts();
+        let should_spawn = !blocks
+            .any(|block| any_other_part_contains_block_at(parts, usize::MAX, block.position));
+        if should_spawn {
+            world.add_part(spawner.spawns.clone(), &mut commands, &*assets);
         }
     }
 }

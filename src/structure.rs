@@ -6,7 +6,7 @@ use crate::{
     world::Position,
 };
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Structure {
     pub blocks: Vec<Block>,
 }

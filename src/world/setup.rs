@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use super::{base::World, WorldSnapshot};
 use crate::{
     block::{Block, BlockFacing, BlockKind},
+    simulation::make_spawner,
     structure::Structure,
 };
 
@@ -11,6 +12,16 @@ pub fn setup_world(commands: &mut Commands, assets: &AssetServer) {
     let mut world = World::new(factory_floor, commands, assets);
     let blank_structure = Structure { blocks: Vec::new() };
     world.add_part(blank_structure, commands, assets);
+
+    let spawns = Structure {
+        blocks: vec![Block {
+            kind: BlockKind::DecoStructure2,
+            facing: BlockFacing::Pz,
+            position: (0, 0, 0),
+        }],
+    };
+    make_spawner(spawns, &mut world, commands, assets);
+
     commands.insert_resource(WorldSnapshot(world.clone()));
     commands.insert_resource(world);
 }
