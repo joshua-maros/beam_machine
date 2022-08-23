@@ -81,7 +81,7 @@ fn part_is_supported(parts: &[Part], part: usize, in_direction: BlockFacing) -> 
     false
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct PhysicsState {
     can_move: [bool; 6],
     farthest_tractor_beam: [i32; 6],
@@ -113,7 +113,9 @@ fn run_simulation(
         parts.len()
     ];
     let directions = BlockFacing::all();
-    for block in all_blocks(parts).filter(|x| x.kind == BlockKind::TractorBeamSource) {
+    for (part_containing_tractor_beam, block) in
+        all_blocks(parts).filter(|(_, x)| x.kind == BlockKind::TractorBeamSource)
+    {
         let pull_direction = block.facing.reverse();
         let pull_direction_index = directions
             .iter()
@@ -128,6 +130,9 @@ fn run_simulation(
                 bp.2 + distance * o.2,
             );
             if let Some(part_index) = find_part_containing_block_at(parts, position) {
+                if part_index == part_containing_tractor_beam {
+                    continue;
+                }
                 let ftb = &mut states[part_index].farthest_tractor_beam[pull_direction_index];
                 *ftb = (*ftb).max(distance);
                 break;
@@ -135,12 +140,20 @@ fn run_simulation(
         }
     }
     for part_index in 1..parts.len() {
+        let state = &mut states[part_index];
         // Gravity.
-        states[part_index].farthest_tractor_beam[0] = i32::MAX;
-        for (direction_index, &direction) in directions.iter().enumerate() {
+        let upwards_pull = state.farthest_tractor_beam[0];
+        state.farthest_tractor_beam[1] = if upwards_pull < 1 {
+            i32::MAX
+        } else {
+            upwards_pull
+        };
+        let mut directions: Vec<_> = directions.iter().copied().enumerate().collect();
+        directions.sort_by_key(|&(idx, _)| -state.farthest_tractor_beam[idx]);
+        for (direction_index, direction) in directions {
             let parts = world.parts();
             let can_move = !part_is_supported(parts, part_index, direction);
-            if can_move && states[part_index].farthest_tractor_beam[direction_index] > 1 {
+            if can_move && state.farthest_tractor_beam[direction_index] > 1 {
                 world.modify_part(
                     part_index,
                     |part| part.translate(direction.offset()),
@@ -159,8 +172,11 @@ fn find_part_containing_block_at(parts: &[Part], position: Position) -> Option<u
         .position(|part| part.0.blocks.iter().any(|block| block.position == position))
 }
 
-fn all_blocks(parts: &[Part]) -> impl Iterator<Item = &Block> {
-    parts.iter().flat_map(|part| part.0.blocks.iter())
+fn all_blocks(parts: &[Part]) -> impl Iterator<Item = (usize, &Block)> {
+    parts
+        .iter()
+        .enumerate()
+        .flat_map(|(index, part)| part.0.blocks.iter().map(move |x| (index, x)))
 }
 
 pub struct SimulationPlugin;

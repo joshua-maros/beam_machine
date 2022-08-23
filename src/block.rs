@@ -40,7 +40,7 @@ pub enum BlockFacing {
 
 impl BlockFacing {
     pub fn all() -> [Self; 6] {
-        [Self::Nz, Self::Pz, Self::Px, Self::Py, Self::Nx, Self::Ny]
+        [Self::Pz, Self::Nz, Self::Px, Self::Py, Self::Nx, Self::Ny]
     }
 
     pub fn offset(&self) -> Position {
