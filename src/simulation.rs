@@ -1,4 +1,6 @@
-use bevy::prelude::*;
+use std::collections::VecDeque;
+
+use bevy::{prelude::*, utils::HashSet};
 
 use crate::{
     block::{Block, BlockFacing, BlockKind},
@@ -81,6 +83,34 @@ fn part_is_supported(parts: &[Part], part: usize, in_direction: BlockFacing) -> 
     false
 }
 
+fn part_touches(parts: &[Part], part: usize, in_direction: BlockFacing) -> HashSet<usize> {
+    let mut included_parts = HashSet::new();
+    let mut included_parts_queue = VecDeque::from_iter(std::iter::once(part));
+    while let Some(part) = included_parts_queue.pop_front() {
+        for block in &parts[part].0.blocks {
+            let p = block.position;
+            let o = in_direction.offset();
+            let touching = (p.0 + o.0, p.1 + o.1, p.2 + o.2);
+            for part in 0..parts.len() {
+                if included_parts.contains(&part) {
+                    continue;
+                }
+                if parts[part].0.blocks.iter().any(|b| b.position == touching) {
+                    included_parts.insert(part);
+                    included_parts_queue.push_back(part);
+                }
+            }
+        }
+    }
+    included_parts
+}
+
+#[derive(Clone, Debug)]
+struct CanMove {
+    can_move: bool,
+    other_moved_parts: Vec<usize>,
+}
+
 #[derive(Clone, Copy, Debug)]
 struct PhysicsState {
     can_move: [bool; 6],
@@ -152,14 +182,17 @@ fn run_simulation(
         directions.sort_by_key(|&(idx, _)| -state.farthest_tractor_beam[idx]);
         for (direction_index, direction) in directions {
             let parts = world.parts();
-            let can_move = !part_is_supported(parts, part_index, direction);
+            let touches = part_touches(parts, part_index, direction);
+            let can_move = !touches.contains(&part_index) && !touches.contains(&0);
             if can_move && state.farthest_tractor_beam[direction_index] > 1 {
-                world.modify_part(
-                    part_index,
-                    |part| part.translate(direction.offset()),
-                    &mut commands,
-                    &*assets,
-                );
+                for part_index in touches.into_iter().chain(std::iter::once(part_index)) {
+                    world.modify_part(
+                        part_index,
+                        |part| part.translate(direction.offset()),
+                        &mut commands,
+                        &*assets,
+                    );
+                }
                 break;
             }
         }

@@ -18,11 +18,11 @@ impl World {
         for (index, part) in self.parts.iter().enumerate() {
             part.0.debug_assert_invariants();
             for block in &part.0.blocks {
-                debug_assert!(
-                    !positions.contains(&block.position),
-                    "Part {} overlaps with a previous part or the factory floor!",
-                    index
-                );
+                // debug_assert!(
+                //     !positions.contains(&block.position),
+                //     "Part {} overlaps with a previous part or the factory floor!",
+                //     index
+                // );
                 positions.insert(block.position);
             }
         }
