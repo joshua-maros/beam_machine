@@ -114,7 +114,7 @@ struct CanMove {
 #[derive(Clone, Copy, Debug)]
 struct PhysicsState {
     can_move: [bool; 6],
-    farthest_tractor_beam: [i32; 6],
+    farthest_tractor_beam: [(i32, usize); 6],
 }
 
 fn run_simulation(
@@ -138,7 +138,7 @@ fn run_simulation(
     let mut states = vec![
         PhysicsState {
             can_move: [false; 6],
-            farthest_tractor_beam: [0; 6]
+            farthest_tractor_beam: [(0, 0); 6]
         };
         parts.len()
     ];
@@ -164,7 +164,10 @@ fn run_simulation(
                     continue;
                 }
                 let ftb = &mut states[part_index].farthest_tractor_beam[pull_direction_index];
-                *ftb = (*ftb).max(distance);
+                ftb.0 = ftb.0.max(distance);
+                if ftb.0 == distance {
+                    ftb.1 = part_containing_tractor_beam;
+                }
                 break;
             }
         }
@@ -172,19 +175,20 @@ fn run_simulation(
     for part_index in 1..parts.len() {
         let state = &mut states[part_index];
         // Gravity.
-        let upwards_pull = state.farthest_tractor_beam[0];
-        state.farthest_tractor_beam[1] = if upwards_pull < 1 {
+        let upwards_pull = state.farthest_tractor_beam[0].0;
+        state.farthest_tractor_beam[1].0 = if upwards_pull < 1 {
             i32::MAX
         } else {
             upwards_pull
         };
         let mut directions: Vec<_> = directions.iter().copied().enumerate().collect();
-        directions.sort_by_key(|&(idx, _)| -state.farthest_tractor_beam[idx]);
+        directions.sort_by_key(|&(idx, _)| -state.farthest_tractor_beam[idx].0);
         for (direction_index, direction) in directions {
             let parts = world.parts();
             let touches = part_touches(parts, part_index, direction);
-            let can_move = !touches.contains(&part_index) && !touches.contains(&0);
-            if can_move && state.farthest_tractor_beam[direction_index] > 1 {
+            let can_move = !touches.contains(&state.farthest_tractor_beam[direction_index].1)
+                && !touches.contains(&0);
+            if can_move && state.farthest_tractor_beam[direction_index].0 > 1 {
                 for part_index in touches.into_iter().chain(std::iter::once(part_index)) {
                     world.modify_part(
                         part_index,
