@@ -30,13 +30,14 @@ pub fn interface_system(
     mut key_events: EventReader<KeyboardInput>,
     mut mouse_button_events: EventReader<MouseButtonInput>,
     mut state: ResMut<InterfaceState>,
+    simulation_state: Res<SimulationState>,
     mut world: ResMut<World>,
     assets: Res<AssetServer>,
     time: Res<Time>,
 ) {
     for event in key_events.iter() {
-        update_directional_key(event, &mut *state);
-        update_block_keys(event, &mut *state);
+        update_directional_key(event, &mut *state, &*simulation_state);
+        update_block_keys(event, &mut *state, &*simulation_state);
         if event.key_code == Some(KeyCode::LShift) || event.key_code == Some(KeyCode::RShift) {
             if event.state == ButtonState::Pressed {
                 state.holding_shift = true;
@@ -49,6 +50,7 @@ pub fn interface_system(
     handle_mouse(
         &mut cursor,
         &mut *state,
+        &*simulation_state,
         block_raycast_intersection,
         &mut commands,
         &mut mouse_button_events,

@@ -3,12 +3,18 @@ use bevy::{
     prelude::*,
 };
 
-use crate::block::{BlockFacing, BlockKind};
-
 use super::{util::directional_key_index, InterfaceState};
+use crate::{
+    block::{BlockFacing, BlockKind},
+    simulation::SimulationState,
+};
 
-pub(super) fn update_directional_key(event: &KeyboardInput, state: &mut InterfaceState) {
-    if state.block_to_place.is_some() {
+pub(super) fn update_directional_key(
+    event: &KeyboardInput,
+    state: &mut InterfaceState,
+    simulation_state: &SimulationState,
+) {
+    if state.block_to_place.is_some() && !simulation_state.is_started() {
         state.movement_keys.fill(false);
         return;
     }
@@ -18,8 +24,12 @@ pub(super) fn update_directional_key(event: &KeyboardInput, state: &mut Interfac
     }
 }
 
-pub(super) fn update_block_keys(event: &KeyboardInput, state: &mut InterfaceState) {
-    if event.state != ButtonState::Pressed {
+pub(super) fn update_block_keys(
+    event: &KeyboardInput,
+    state: &mut InterfaceState,
+    simulation_state: &SimulationState,
+) {
+    if event.state != ButtonState::Pressed || simulation_state.is_started() {
         return;
     }
     match event.key_code {

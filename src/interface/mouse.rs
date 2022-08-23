@@ -7,12 +7,14 @@ use bevy_mod_raycast::Intersection;
 use super::{util::get_mouse_position_in_world, Cursor, InterfaceState};
 use crate::{
     block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
+    simulation::SimulationState,
     world::{Position, World},
 };
 
 pub(super) fn handle_mouse(
     cursor: &mut Query<(&mut Transform, &mut Visibility), (With<Cursor>, Without<Camera3d>)>,
     state: &mut InterfaceState,
+    simulation_state: &SimulationState,
     block_raycast_intersection: Query<(&Intersection<BlockRaycastSet>,)>,
     commands: &mut Commands,
     mouse_button_events: &mut EventReader<MouseButtonInput>,
@@ -24,6 +26,11 @@ pub(super) fn handle_mouse(
         .unwrap();
     place_cursor_visibility.is_visible = state.block_to_place.is_some();
     remove_cursor_visibility.is_visible = !state.block_to_place.is_some();
+    if simulation_state.is_started() {
+        place_cursor_visibility.is_visible = false;
+        remove_cursor_visibility.is_visible = false;
+        return;
+    }
     let mouse_position = get_mouse_position_in_world(&block_raycast_intersection);
     if let Some((above_cursor, below_cursor)) = mouse_position {
         handle_mouse_events(
