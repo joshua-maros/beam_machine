@@ -76,7 +76,7 @@ fn handle_mouse_events(
                     state.block_to_place = None;
                 }
             } else {
-                remove_block(world, below_cursor, commands, assets);
+                remove_block(world, below_cursor, commands, assets, &*state);
             }
         }
     }
@@ -110,8 +110,9 @@ fn remove_block(
     below_cursor: Position,
     commands: &mut Commands,
     assets: &AssetServer,
+    state: &InterfaceState,
 ) {
-    for part in 1..world.parts().len() {
+    for part in state.first_user_part..world.parts().len() {
         world.modify_part(
             part,
             |part| part.remove_blocks_at(below_cursor),

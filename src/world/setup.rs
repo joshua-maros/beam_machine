@@ -7,11 +7,9 @@ use crate::{
     structure::Structure,
 };
 
-pub fn setup_world(commands: &mut Commands, assets: &AssetServer) {
+pub fn setup_world(commands: &mut Commands, assets: &AssetServer) -> usize {
     let factory_floor = create_factory_floor();
     let mut world = World::new(factory_floor, commands, assets);
-    let blank_structure = Structure { blocks: Vec::new() };
-    world.add_part(blank_structure, commands, assets);
 
     let spawns = Structure {
         blocks: vec![Block {
@@ -22,8 +20,15 @@ pub fn setup_world(commands: &mut Commands, assets: &AssetServer) {
     };
     make_spawner(spawns, &mut world, commands, assets);
 
+    let first_user_part = world.parts().len();
+
+    let blank_structure = Structure { blocks: Vec::new() };
+    world.add_part(blank_structure, commands, assets);
+
     commands.insert_resource(WorldSnapshot(world.clone()));
     commands.insert_resource(world);
+
+    first_user_part
 }
 
 fn create_factory_floor() -> Structure {

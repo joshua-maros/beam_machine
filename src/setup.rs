@@ -8,8 +8,8 @@ use crate::block::BlockRaycastSet;
 pub fn setup(mut commands: Commands, assets: Res<AssetServer>) {
     setup_camera(&mut commands);
     setup_light(&mut commands);
-    crate::interface::setup::setup_interface_state(&mut commands, &*assets);
-    crate::world::setup::setup_world(&mut commands, &*assets);
+    let first_user_part = crate::world::setup::setup_world(&mut commands, &*assets);
+    crate::interface::setup::setup_interface_state(&mut commands, &*assets, first_user_part);
 }
 
 fn setup_camera(commands: &mut Commands) {

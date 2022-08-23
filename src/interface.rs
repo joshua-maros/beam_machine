@@ -92,16 +92,19 @@ pub fn switch_part_system(
     mut key_events: EventReader<KeyboardInput>,
     assets: Res<AssetServer>,
 ) {
+    let state = &mut *state;
+    let cep = &mut state.currently_editing_part;
     for event in key_events.iter() {
         if event.key_code == Some(KeyCode::Equals) && event.state == ButtonState::Pressed {
-            state.currently_editing_part += 1;
-            if world.parts().len() <= state.currently_editing_part {
+            *cep += 1;
+            if world.parts().len() <= *cep {
                 world.add_part(Structure { blocks: Vec::new() }, &mut commands, &*assets);
             }
-            println!("{:#?}", state.currently_editing_part);
+            println!("{:#?}", *cep);
         } else if event.key_code == Some(KeyCode::Minus) && event.state == ButtonState::Pressed {
-            state.currently_editing_part -= 1;
-            println!("{:#?}", state.currently_editing_part);
+            *cep -= 1;
+            *cep = (*cep).max(state.first_user_part);
+            println!("{:#?}", *cep);
         }
     }
 }

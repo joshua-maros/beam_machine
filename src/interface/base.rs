@@ -12,6 +12,7 @@ pub enum InterfaceMode {
 pub struct InterfaceState {
     pub mode: InterfaceMode,
     pub movement_keys: [bool; 4],
+    pub first_user_part: usize,
     pub currently_editing_part: usize,
     pub block_to_place: Option<BlockKind>,
     pub facing: BlockFacing,
