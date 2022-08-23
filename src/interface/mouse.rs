@@ -66,6 +66,7 @@ fn handle_mouse_events(
                 place_block(
                     block_to_place,
                     state.facing,
+                    state.currently_editing_part,
                     world,
                     above_cursor,
                     commands,
@@ -84,13 +85,14 @@ fn handle_mouse_events(
 fn place_block(
     kind: BlockKind,
     facing: BlockFacing,
+    part: usize,
     world: &mut World,
     above_cursor: (i32, i32, i32),
     commands: &mut Commands,
     assets: &AssetServer,
 ) {
     world.modify_part(
-        1,
+        part,
         |part| {
             part.blocks.push(Block {
                 facing,

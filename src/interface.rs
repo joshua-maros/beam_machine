@@ -18,6 +18,7 @@ use self::{
 use crate::{
     block::BlockRaycastSet,
     simulation::{self, SimulationState},
+    structure::Structure,
     world::{World, WorldSnapshot},
 };
 
@@ -84,11 +85,33 @@ pub fn simulation_interface_system(
     }
 }
 
+pub fn switch_part_system(
+    mut commands: Commands,
+    mut world: ResMut<World>,
+    mut state: ResMut<InterfaceState>,
+    mut key_events: EventReader<KeyboardInput>,
+    assets: Res<AssetServer>,
+) {
+    for event in key_events.iter() {
+        if event.key_code == Some(KeyCode::Equals) && event.state == ButtonState::Pressed {
+            state.currently_editing_part += 1;
+            if world.parts().len() <= state.currently_editing_part {
+                world.add_part(Structure { blocks: Vec::new() }, &mut commands, &*assets);
+            }
+            println!("{:#?}", state.currently_editing_part);
+        } else if event.key_code == Some(KeyCode::Minus) && event.state == ButtonState::Pressed {
+            state.currently_editing_part -= 1;
+            println!("{:#?}", state.currently_editing_part);
+        }
+    }
+}
+
 pub struct InterfacePlugin;
 
 impl Plugin for InterfacePlugin {
     fn build(&self, app: &mut App) {
         app.add_system(interface_system)
-            .add_system(simulation_interface_system);
+            .add_system(simulation_interface_system)
+            .add_system(switch_part_system);
     }
 }

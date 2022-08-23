@@ -25,6 +25,7 @@ pub fn setup_interface_state(commands: &mut Commands, assets: &AssetServer) {
     commands.insert_resource(InterfaceState {
         mode: InterfaceMode::Default,
         movement_keys: [false; 4],
+        currently_editing_part: 1,
         block_to_place: None,
         facing: BlockFacing::Px,
         holding_shift: false,

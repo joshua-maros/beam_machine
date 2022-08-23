@@ -50,7 +50,7 @@ impl BlockFacing {
             Self::Nx => (-1, 0, 0),
             Self::Ny => (0, -1, 0),
             Self::Pz => (0, 0, 1),
-            Self::Nz => (1, 0, -1),
+            Self::Nz => (0, 0, -1),
         }
     }
 

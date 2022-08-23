@@ -130,6 +130,7 @@ fn run_simulation(
             if let Some(part_index) = find_part_containing_block_at(parts, position) {
                 let ftb = &mut states[part_index].farthest_tractor_beam[pull_direction_index];
                 *ftb = (*ftb).max(distance);
+                break;
             }
         }
     }
