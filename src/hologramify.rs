@@ -1,4 +1,5 @@
 use bevy::{
+    pbr::NotShadowReceiver,
     prelude::*,
     render::view::RenderLayers,
     scene::{Scene, SceneInstance},
@@ -10,7 +11,8 @@ pub struct PleaseHologramifyThis;
 fn insert_render_layers(commands: &mut Commands, onto: Entity, children_query: &Query<&Children>) {
     commands
         .entity(onto)
-        .insert(RenderLayers::from_layers(&[1]));
+        .insert(RenderLayers::from_layers(&[1]))
+        .insert(NotShadowReceiver);
     if let Ok(children) = children_query.get(onto) {
         for &child in children.iter() {
             insert_render_layers(commands, child, children_query);
