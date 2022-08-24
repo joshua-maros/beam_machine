@@ -94,7 +94,7 @@ fn part_is_supported(parts: &[Part], part: usize, in_direction: BlockFacing) -> 
 }
 
 fn part_touches(parts: &[Part], part: usize, in_direction: BlockFacing) -> HashSet<usize> {
-    let mut included_parts = HashSet::new();
+    let mut included_parts = HashSet::from_iter(std::iter::once(part));
     let mut included_parts_queue = VecDeque::from_iter(std::iter::once(part));
     while let Some(part) = included_parts_queue.pop_front() {
         for block in &parts[part].0.blocks {
@@ -158,7 +158,7 @@ fn run_simulation(
     if !state.running {
         return;
     }
-    state.tick_timer = state.tick_timer + 4.0 * time.delta_seconds();
+    state.tick_timer += 4.0 * time.delta_seconds();
     if state.tick_timer >= 1.0 {
         // Skip excess ticks if the number is far greater than one.
         state.tick_timer = state.tick_timer % 1.0;
@@ -251,7 +251,7 @@ fn run_simulation(
             let can_move = !touches.contains(&state.farthest_tractor_beam[direction_index].1)
                 && !touches.contains(&0);
             if can_move && state.farthest_tractor_beam[direction_index].0 > 1 {
-                for part_index in touches.into_iter().chain(std::iter::once(part_index)) {
+                for part_index in touches.into_iter() {
                     let o = direction.offset();
                     let start = Vec3::new(-o.0 as _, -o.1 as _, -o.2 as _);
                     world.animate_part(
