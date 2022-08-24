@@ -3,6 +3,7 @@ use std::collections::VecDeque;
 use bevy::{prelude::*, utils::HashSet};
 
 use crate::{
+    animations::Animation,
     block::{Block, BlockFacing, BlockKind},
     structure::Structure,
     world::{Part, Position, World, WorldSnapshot},
@@ -26,6 +27,10 @@ impl SimulationState {
     pub fn resume(&mut self) {
         self.running = true;
         self.tick_timer = 0.0;
+    }
+
+    pub(crate) fn tick_progress(&self) -> f32 {
+        self.tick_timer
     }
 }
 
@@ -53,8 +58,7 @@ pub fn end_simulation(
     if !simulation_state.started {
         return;
     }
-    *world = snapshot.0.clone();
-    world.refresh_all_parts(commands, assets);
+    world.set(snapshot.0.clone(), commands, assets);
     simulation_state.started = false;
 }
 
@@ -153,7 +157,7 @@ fn run_simulation(
     if !state.running {
         return;
     }
-    state.tick_timer = state.tick_timer + 2.0 * time.delta_seconds();
+    state.tick_timer = state.tick_timer + 4.0 * time.delta_seconds();
     if state.tick_timer >= 1.0 {
         // Skip excess ticks if the number is far greater than one.
         state.tick_timer = state.tick_timer % 1.0;
@@ -220,6 +224,12 @@ fn run_simulation(
             }
         }
     }
+
+    for part_index in 1..parts.len() {
+        world.animate_part(part_index, Animation::Stationary, &mut commands);
+    }
+
+    let parts = world.parts();
     for part_index in 1..parts.len() {
         let state = &mut states[part_index];
         // Gravity.
@@ -238,9 +248,16 @@ fn run_simulation(
                 && !touches.contains(&0);
             if can_move && state.farthest_tractor_beam[direction_index].0 > 1 {
                 for part_index in touches.into_iter().chain(std::iter::once(part_index)) {
+                    let o = direction.offset();
+                    let start = Vec3::new(-o.0 as _, -o.1 as _, -o.2 as _);
+                    world.animate_part(
+                        part_index,
+                        Animation::Lerp(start, Vec3::ZERO),
+                        &mut commands,
+                    );
                     world.modify_part(
                         part_index,
-                        |part| part.translate(direction.offset()),
+                        |part| part.translate(o),
                         &mut commands,
                         &*assets,
                     );

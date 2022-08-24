@@ -18,11 +18,11 @@ impl World {
         for (index, part) in self.parts.iter().enumerate() {
             part.0.debug_assert_invariants();
             for block in &part.0.blocks {
-                // debug_assert!(
-                //     !positions.contains(&block.position),
-                //     "Part {} overlaps with a previous part or the factory floor!",
-                //     index
-                // );
+                debug_assert!(
+                    !positions.contains(&block.position),
+                    "Part {} overlaps with a previous part or the factory floor!",
+                    index
+                );
                 positions.insert(block.position);
             }
         }
@@ -36,6 +36,16 @@ impl World {
         let factory_floor_ent = spawn_structure(&factory_floor, commands, assets);
         Self {
             parts: vec![(factory_floor, factory_floor_ent)],
+        }
+    }
+
+    pub fn set(&mut self, to: Self, commands: &mut Commands, assets: &AssetServer) {
+        for &(_, entity) in &self.parts {
+            commands.entity(entity).despawn_recursive();
+        }
+        self.parts.clear();
+        for (structure, _) in to.parts {
+            self.add_part(structure, commands, assets);
         }
     }
 }

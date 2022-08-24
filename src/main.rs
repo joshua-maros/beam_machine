@@ -1,3 +1,4 @@
+pub mod animations;
 mod block;
 mod interface;
 mod setup;
@@ -5,6 +6,7 @@ mod simulation;
 mod structure;
 mod world;
 
+use animations::AnimationPlugin;
 use bevy::prelude::*;
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RaycastSystem};
 use bevy_obj::ObjPlugin;
@@ -18,6 +20,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(ObjPlugin)
         .add_plugin(DefaultRaycastingPlugin::<BlockRaycastSet>::default())
+        .add_plugin(AnimationPlugin)
         .add_plugin(InterfacePlugin)
         .add_plugin(SimulationPlugin)
         .add_startup_system(setup)

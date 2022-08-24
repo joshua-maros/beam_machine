@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 
 use super::{Part, World};
-use crate::structure::{spawn_structure, Structure};
+use crate::{
+    animations::Animation,
+    structure::{spawn_structure, Structure},
+};
 
 impl World {
     fn update_part(
@@ -42,6 +45,10 @@ impl World {
     pub fn remove_part(&mut self, index: usize, commands: &mut Commands) {
         commands.entity(self.parts[index].1).despawn_recursive();
         self.parts.remove(index);
+    }
+
+    pub fn animate_part(&mut self, index: usize, animation: Animation, commands: &mut Commands) {
+        commands.entity(self.parts[index].1).insert(animation);
     }
 
     pub fn refresh_all_parts(&self, commands: &mut Commands, assets: &AssetServer) {
