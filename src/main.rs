@@ -12,7 +12,7 @@ use bevy_mod_raycast::{DefaultRaycastingPlugin, RaycastSystem};
 use bevy_obj::ObjPlugin;
 use block::{update_raycast_position_from_cursor, BlockRaycastSet};
 use interface::InterfacePlugin;
-use setup::setup;
+use setup::SetupPlugin;
 use simulation::SimulationPlugin;
 
 fn main() {
@@ -23,7 +23,7 @@ fn main() {
         .add_plugin(AnimationPlugin)
         .add_plugin(InterfacePlugin)
         .add_plugin(SimulationPlugin)
-        .add_startup_system(setup)
+        .add_plugin(SetupPlugin)
         .add_system_to_stage(
             CoreStage::First,
             update_raycast_position_from_cursor.before(RaycastSystem::BuildRays::<BlockRaycastSet>),

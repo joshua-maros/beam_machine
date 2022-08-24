@@ -51,7 +51,11 @@ pub(super) fn update_block_keys(
     }
 }
 
-pub(super) fn move_camera(camera_transform: &mut Transform, movement_keys: [bool; 4], time: &Time) {
+pub(super) fn move_cameras<'a>(
+    cameras: impl Iterator<Item = Mut<'a, Transform>>,
+    movement_keys: [bool; 4],
+    time: &Time,
+) {
     let mut total_offset = Vec2::ZERO;
     let offsets = [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)];
     for (&active, key_offset) in movement_keys.iter().zip(offsets.into_iter()) {
@@ -61,6 +65,8 @@ pub(super) fn move_camera(camera_transform: &mut Transform, movement_keys: [bool
         }
     }
     let speed = 10.0;
-    camera_transform.translation.x += total_offset.x * speed * time.delta_seconds();
-    camera_transform.translation.y += total_offset.y * speed * time.delta_seconds();
+    for mut transform in cameras {
+        transform.translation.x += total_offset.x * speed * time.delta_seconds();
+        transform.translation.y += total_offset.y * speed * time.delta_seconds();
+    }
 }

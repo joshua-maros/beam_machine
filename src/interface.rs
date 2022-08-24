@@ -12,7 +12,7 @@ use bevy::{
 use bevy_mod_raycast::Intersection;
 
 use self::{
-    keys::{move_camera, update_block_keys, update_directional_key},
+    keys::{move_cameras, update_block_keys, update_directional_key},
     mouse::handle_mouse,
 };
 use crate::{
@@ -24,7 +24,7 @@ use crate::{
 
 pub fn interface_system(
     mut commands: Commands,
-    mut camera: Query<(&mut Transform,), (With<Camera3d>, Without<Cursor>)>,
+    mut cameras: Query<&mut Transform, (With<Camera3d>, Without<Cursor>)>,
     mut cursor: Query<(&mut Transform, &mut Visibility), (With<Cursor>, Without<Camera3d>)>,
     block_raycast_intersection: Query<(&Intersection<BlockRaycastSet>,)>,
     mut key_events: EventReader<KeyboardInput>,
@@ -58,8 +58,7 @@ pub fn interface_system(
         &*assets,
     );
 
-    let (mut camera_transform,) = camera.get_single_mut().unwrap();
-    move_camera(&mut *camera_transform, state.movement_keys, &*time);
+    move_cameras(cameras.iter_mut(), state.movement_keys, &*time);
 }
 
 pub fn simulation_interface_system(
