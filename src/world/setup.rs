@@ -16,12 +16,13 @@ pub fn setup_world(commands: &mut Commands, assets: &AssetServer) -> usize {
             kind: BlockKind::DecoStructure2,
             facing: BlockFacing::Pz,
             position: (0, 0, 0),
+            hologram: false,
         }],
     };
     let mut accepts = spawns.clone();
     accepts.translate((5, 0, 0));
     make_input(spawns, &mut world, commands, assets);
-    make_output(accepts, commands);
+    make_output(accepts, &mut world, commands, assets);
 
     let first_user_part = world.parts().len();
 
@@ -43,6 +44,7 @@ fn create_factory_floor() -> Structure {
                 kind: BlockKind::DecoStructure,
                 facing: BlockFacing::Pz,
                 position: (x, y, -1),
+                hologram: false,
             });
         }
     }
@@ -50,6 +52,7 @@ fn create_factory_floor() -> Structure {
         kind: BlockKind::DecoStructureOutput,
         facing: BlockFacing::Pz,
         position: (5, 0, -1),
+        hologram: false,
     });
     factory_floor
 }

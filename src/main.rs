@@ -1,5 +1,6 @@
 pub mod animations;
 mod block;
+mod hologramify;
 mod interface;
 mod setup;
 mod simulation;
@@ -11,6 +12,7 @@ use bevy::prelude::*;
 use bevy_mod_raycast::{DefaultRaycastingPlugin, RaycastSystem};
 use bevy_obj::ObjPlugin;
 use block::{update_raycast_position_from_cursor, BlockRaycastSet};
+use hologramify::HologramifyPlugin;
 use interface::InterfacePlugin;
 use setup::SetupPlugin;
 use simulation::SimulationPlugin;
@@ -21,9 +23,10 @@ fn main() {
         .add_plugin(ObjPlugin)
         .add_plugin(DefaultRaycastingPlugin::<BlockRaycastSet>::default())
         .add_plugin(AnimationPlugin)
+        .add_plugin(HologramifyPlugin)
         .add_plugin(InterfacePlugin)
-        .add_plugin(SimulationPlugin)
         .add_plugin(SetupPlugin)
+        .add_plugin(SimulationPlugin)
         .add_system_to_stage(
             CoreStage::First,
             update_raycast_position_from_cursor.before(RaycastSystem::BuildRays::<BlockRaycastSet>),

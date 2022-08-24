@@ -105,6 +105,7 @@ fn place_block(
                 facing,
                 kind,
                 position: above_cursor,
+                hologram: false,
             })
         },
         commands,

@@ -3,6 +3,7 @@ use bevy_mod_raycast::RayCastMesh;
 
 use crate::{
     block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
+    hologramify::PleaseHologramifyThis,
     world::Position,
 };
 
@@ -69,11 +70,16 @@ impl Structure {
     }
 }
 
-fn spawn_block(commands: &mut Commands, block: &Block, assets: &AssetServer) -> Entity {
+fn spawn_block(
+    commands: &mut Commands,
+    block: &Block,
+    assets: &AssetServer,
+    is_hologram: bool,
+) -> Entity {
     let bbox = assets.load::<Mesh, _>("blocks/bounding_box.obj");
     let scene = assets.load(block.kind.asset_name());
+    let mut commands = commands.spawn();
     commands
-        .spawn()
         .insert_bundle(SceneBundle {
             scene,
             transform: Transform::from_translation(Vec3::new(
@@ -87,8 +93,11 @@ fn spawn_block(commands: &mut Commands, block: &Block, assets: &AssetServer) -> 
         // This will not be rendered since there is no material attached.
         .insert(bbox)
         .insert(RayCastMesh::<BlockRaycastSet>::default())
-        .insert(NotShadowCaster)
-        .id()
+        .insert(NotShadowCaster);
+    if is_hologram {
+        commands.insert(PleaseHologramifyThis);
+    }
+    commands.id()
 }
 
 #[derive(Component)]
@@ -100,6 +109,7 @@ pub fn spawn_structure(
     structure: &Structure,
     commands: &mut Commands,
     assets: &AssetServer,
+    is_hologram: bool,
 ) -> Entity {
     let root = commands
         .spawn()
@@ -125,7 +135,7 @@ pub fn spawn_structure(
                 .id();
             commands.entity(root).add_child(beam);
         }
-        let block = spawn_block(commands, block, assets);
+        let block = spawn_block(commands, block, assets, is_hologram);
         commands.entity(root).add_child(block);
     }
 

@@ -3,7 +3,12 @@ pub type Position = (i32, i32, i32);
 
 use crate::structure::{spawn_structure, Structure};
 
-pub type Part = (Structure, Entity);
+#[derive(Clone, PartialEq, Eq, Hash)]
+pub struct Part {
+    pub structure: Structure,
+    pub physical_instance: Entity,
+    pub is_hologram: bool,
+}
 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub struct World {
@@ -16,13 +21,16 @@ impl World {
     pub(super) fn debug_assert_invariants(&self) {
         let mut positions = HashSet::new();
         for (index, part) in self.parts.iter().enumerate() {
-            part.0.debug_assert_invariants();
-            for block in &part.0.blocks {
-                // debug_assert!(
-                //     !positions.contains(&block.position),
-                //     "Part {} overlaps with a previous part or the factory floor!",
-                //     index
-                // );
+            if part.is_hologram {
+                continue;
+            }
+            part.structure.debug_assert_invariants();
+            for block in &part.structure.blocks {
+                debug_assert!(
+                    !positions.contains(&block.position),
+                    "Part {} overlaps with a previous part or the factory floor!",
+                    index
+                );
                 positions.insert(block.position);
             }
         }
@@ -33,19 +41,27 @@ impl World {
         commands: &mut Commands,
         assets: &AssetServer,
     ) -> Self {
-        let factory_floor_ent = spawn_structure(&factory_floor, commands, assets);
+        let factory_floor_ent = spawn_structure(&factory_floor, commands, assets, false);
         Self {
-            parts: vec![(factory_floor, factory_floor_ent)],
+            parts: vec![Part {
+                structure: factory_floor,
+                physical_instance: factory_floor_ent,
+                is_hologram: false,
+            }],
         }
     }
 
     pub fn set(&mut self, to: Self, commands: &mut Commands, assets: &AssetServer) {
-        for &(_, entity) in &self.parts {
-            commands.entity(entity).despawn_recursive();
+        for part in &self.parts {
+            commands.entity(part.physical_instance).despawn_recursive();
         }
         self.parts.clear();
-        for (structure, _) in to.parts {
-            self.add_part(structure, commands, assets);
+        for part in to.parts {
+            if part.is_hologram {
+                self.add_hologram(part.structure, commands, assets);
+            } else {
+                self.add_part(part.structure, commands, assets);
+            }
         }
     }
 }

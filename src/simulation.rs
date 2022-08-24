@@ -69,8 +69,11 @@ fn any_other_part_contains_block_at(parts: &[Part], exclude: usize, at_position:
         Box::new(parts.iter())
     };
     for part in parts {
+        if part.is_hologram {
+            continue;
+        }
         if part
-            .0
+            .structure
             .blocks
             .iter()
             .any(|block| block.position == at_position)
@@ -82,7 +85,7 @@ fn any_other_part_contains_block_at(parts: &[Part], exclude: usize, at_position:
 }
 
 fn part_is_supported(parts: &[Part], part: usize, in_direction: BlockFacing) -> bool {
-    for block in &parts[part].0.blocks {
+    for block in &parts[part].structure.blocks {
         let p = block.position;
         let o = in_direction.offset();
         let below = (p.0 + o.0, p.1 + o.1, p.2 + o.2);
@@ -97,7 +100,7 @@ fn part_touches(parts: &[Part], part: usize, in_direction: BlockFacing) -> HashS
     let mut included_parts = HashSet::from_iter(std::iter::once(part));
     let mut included_parts_queue = VecDeque::from_iter(std::iter::once(part));
     while let Some(part) = included_parts_queue.pop_front() {
-        for block in &parts[part].0.blocks {
+        for block in &parts[part].structure.blocks {
             let p = block.position;
             let o = in_direction.offset();
             let touching = (p.0 + o.0, p.1 + o.1, p.2 + o.2);
@@ -105,7 +108,13 @@ fn part_touches(parts: &[Part], part: usize, in_direction: BlockFacing) -> HashS
                 if included_parts.contains(&part) {
                     continue;
                 }
-                if parts[part].0.blocks.iter().any(|b| b.position == touching) {
+                if !parts[part].is_hologram
+                    && parts[part]
+                        .structure
+                        .blocks
+                        .iter()
+                        .any(|b| b.position == touching)
+                {
                     included_parts.insert(part);
                     included_parts_queue.push_back(part);
                 }
@@ -132,7 +141,7 @@ pub fn make_input(
     commands: &mut Commands,
     assets: &AssetServer,
 ) {
-    world.add_part(spawns.clone(), commands, assets);
+    world.add_hologram(spawns.clone(), commands, assets);
     commands.spawn().insert(Input { spawns });
 }
 
@@ -141,7 +150,13 @@ pub struct Output {
     accepts: Structure,
 }
 
-pub fn make_output(accepts: Structure, commands: &mut Commands) {
+pub fn make_output(
+    accepts: Structure,
+    world: &mut World,
+    commands: &mut Commands,
+    assets: &AssetServer,
+) {
+    world.add_hologram(accepts.clone(), commands, assets);
     commands.spawn().insert(Output { accepts });
 }
 
@@ -180,7 +195,7 @@ fn run_simulation(
         let parts = world.parts();
         let matching_part_index = parts
             .iter()
-            .position(|part| part.0.matches(&output.accepts));
+            .position(|part| part.structure.matches(&output.accepts) && !part.is_hologram);
         if let Some(matching_part_index) = matching_part_index {
             world.remove_part(matching_part_index, &mut commands);
         }
@@ -235,6 +250,9 @@ fn run_simulation(
 
     let parts = world.parts();
     for part_index in 1..parts.len() {
+        if world.parts()[part_index].is_hologram {
+            continue;
+        }
         let state = &mut states[part_index];
         // Gravity.
         let upwards_pull = state.farthest_tractor_beam[0].0;
@@ -273,16 +291,21 @@ fn run_simulation(
 }
 
 fn find_part_containing_block_at(parts: &[Part], position: Position) -> Option<usize> {
-    parts
-        .iter()
-        .position(|part| part.0.blocks.iter().any(|block| block.position == position))
+    parts.iter().position(|part| {
+        !part.is_hologram
+            && part
+                .structure
+                .blocks
+                .iter()
+                .any(|block| block.position == position)
+    })
 }
 
 fn all_blocks(parts: &[Part]) -> impl Iterator<Item = (usize, &Block)> {
     parts
         .iter()
         .enumerate()
-        .flat_map(|(index, part)| part.0.blocks.iter().map(move |x| (index, x)))
+        .flat_map(|(index, part)| part.structure.blocks.iter().map(move |x| (index, x)))
 }
 
 pub struct SimulationPlugin;
