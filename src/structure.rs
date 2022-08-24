@@ -91,6 +91,11 @@ fn spawn_block(commands: &mut Commands, block: &Block, assets: &AssetServer) -> 
         .id()
 }
 
+#[derive(Component)]
+pub struct Beam {
+    pub for_block: Block,
+}
+
 pub fn spawn_structure(
     structure: &Structure,
     commands: &mut Commands,
@@ -102,6 +107,24 @@ pub fn spawn_structure(
         .id();
 
     for block in &structure.blocks {
+        if block.kind == BlockKind::TractorBeamSource {
+            let scene = assets.load("tractor_beam.glb#Scene0");
+            let beam = commands
+                .spawn()
+                .insert(Beam { for_block: *block })
+                .insert_bundle(SceneBundle {
+                    scene,
+                    transform: Transform::from_translation(Vec3::new(
+                        block.position.0 as f32,
+                        block.position.1 as f32,
+                        block.position.2 as f32,
+                    ))
+                    .with_rotation(block.facing.rotation()),
+                    ..Default::default()
+                })
+                .id();
+            commands.entity(root).add_child(beam);
+        }
         let block = spawn_block(commands, block, assets);
         commands.entity(root).add_child(block);
     }

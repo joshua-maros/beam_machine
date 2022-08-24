@@ -5,7 +5,7 @@ use bevy::{prelude::*, utils::HashSet};
 use crate::{
     animations::Animation,
     block::{Block, BlockFacing, BlockKind},
-    structure::Structure,
+    structure::{Beam, Structure},
     world::{Part, Position, World, WorldSnapshot},
 };
 
@@ -149,6 +149,7 @@ fn run_simulation(
     mut commands: Commands,
     inputs: Query<&Input>,
     outputs: Query<&Output>,
+    mut beams: Query<(&mut Transform, &Beam)>,
     mut world: ResMut<World>,
     mut state: ResMut<SimulationState>,
     time: Res<Time>,
@@ -205,6 +206,8 @@ fn run_simulation(
             .unwrap();
         let bp = block.position;
         let o = block.facing.offset();
+        let (mut transform, _) = beams.iter_mut().find(|x| &x.1.for_block == block).unwrap();
+        transform.scale = Vec3::ZERO;
         for distance in 1..100 {
             let position = (
                 bp.0 + distance * o.0,
@@ -220,6 +223,7 @@ fn run_simulation(
                 if ftb.0 == distance {
                     ftb.1 = part_containing_tractor_beam;
                 }
+                transform.scale = Vec3::new(distance as f32 - 0.5, 1.0, 1.0);
                 break;
             }
         }
