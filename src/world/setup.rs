@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::{base::World, WorldSnapshot};
 use crate::{
     block::{Block, BlockFacing, BlockKind},
-    simulation::make_spawner,
+    simulation::{make_input, make_output},
     structure::Structure,
 };
 
@@ -18,7 +18,10 @@ pub fn setup_world(commands: &mut Commands, assets: &AssetServer) -> usize {
             position: (0, 0, 0),
         }],
     };
-    make_spawner(spawns, &mut world, commands, assets);
+    let mut accepts = spawns.clone();
+    accepts.translate((5, 0, 0));
+    make_input(spawns, &mut world, commands, assets);
+    make_output(accepts, commands);
 
     let first_user_part = world.parts().len();
 
@@ -43,5 +46,10 @@ fn create_factory_floor() -> Structure {
             });
         }
     }
+    factory_floor.set_block(Block {
+        kind: BlockKind::DecoStructureOutput,
+        facing: BlockFacing::Pz,
+        position: (5, 0, -1),
+    });
     factory_floor
 }

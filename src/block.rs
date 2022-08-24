@@ -9,6 +9,8 @@ use crate::world::Position;
 pub enum BlockKind {
     DecoStructure,
     DecoStructure2,
+    DecoStructureInput,
+    DecoStructureOutput,
     Structure,
     Activator,
     TractorBeamSource,
@@ -21,6 +23,8 @@ impl BlockKind {
         match self {
             Self::DecoStructure => "blocks/deco_structure.glb#Scene0",
             Self::DecoStructure2 => "blocks/deco_structure_2.glb#Scene0",
+            Self::DecoStructureInput => "blocks/deco_structure_input.glb#Scene0",
+            Self::DecoStructureOutput => "blocks/deco_structure_output.glb#Scene0",
             Self::Structure => "blocks/structure.glb#Scene0",
             Self::Activator => "blocks/activator.glb#Scene0",
             Self::TractorBeamSource => "blocks/tractor_beam_source.glb#Scene0",

@@ -2,7 +2,7 @@ use bevy::{pbr::NotShadowCaster, prelude::*, utils::HashSet};
 use bevy_mod_raycast::RayCastMesh;
 
 use crate::{
-    block::{Block, BlockRaycastSet},
+    block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
     world::Position,
 };
 
@@ -38,6 +38,33 @@ impl Structure {
                 self.blocks.remove(i);
                 return;
             }
+        }
+    }
+
+    pub fn set_block(&mut self, block: Block) {
+        for existing_block in &mut self.blocks {
+            if existing_block.position == block.position {
+                *existing_block = block;
+                return;
+            }
+        }
+        self.blocks.push(block);
+    }
+
+    pub fn contains_block(&self, block: &Block) -> bool {
+        self.blocks.contains(block)
+    }
+
+    pub fn matches(&self, other: &Structure) -> bool {
+        if self.blocks.len() != other.blocks.len() {
+            false
+        } else {
+            for block in &self.blocks {
+                if !other.contains_block(block) {
+                    return false;
+                }
+            }
+            true
         }
     }
 }

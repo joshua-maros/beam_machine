@@ -39,6 +39,11 @@ impl World {
         self.debug_assert_invariants();
     }
 
+    pub fn remove_part(&mut self, index: usize, commands: &mut Commands) {
+        commands.entity(self.parts[index].1).despawn_recursive();
+        self.parts.remove(index);
+    }
+
     pub fn refresh_all_parts(&self, commands: &mut Commands, assets: &AssetServer) {
         for part in &self.parts {
             Self::update_part(part.1, &part.0, commands, assets);

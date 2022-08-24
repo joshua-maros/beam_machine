@@ -118,23 +118,33 @@ struct PhysicsState {
 }
 
 #[derive(Clone, Debug, Component)]
-pub struct Spawner {
+pub struct Input {
     spawns: Structure,
 }
 
-pub fn make_spawner(
+pub fn make_input(
     spawns: Structure,
     world: &mut World,
     commands: &mut Commands,
     assets: &AssetServer,
 ) {
     world.add_part(spawns.clone(), commands, assets);
-    commands.spawn().insert(Spawner { spawns });
+    commands.spawn().insert(Input { spawns });
+}
+
+#[derive(Clone, Debug, Component)]
+pub struct Output {
+    accepts: Structure,
+}
+
+pub fn make_output(accepts: Structure, commands: &mut Commands) {
+    commands.spawn().insert(Output { accepts });
 }
 
 fn run_simulation(
     mut commands: Commands,
-    spawners: Query<&Spawner>,
+    inputs: Query<&Input>,
+    outputs: Query<&Output>,
     mut world: ResMut<World>,
     mut state: ResMut<SimulationState>,
     time: Res<Time>,
@@ -150,6 +160,27 @@ fn run_simulation(
     } else {
         return;
     }
+
+    for input in inputs.iter() {
+        let mut blocks = input.spawns.blocks.iter();
+        let parts = world.parts();
+        let should_spawn = !blocks
+            .any(|block| any_other_part_contains_block_at(parts, usize::MAX, block.position));
+        if should_spawn {
+            world.add_part(input.spawns.clone(), &mut commands, &*assets);
+        }
+    }
+
+    for output in outputs.iter() {
+        let parts = world.parts();
+        let matching_part_index = parts
+            .iter()
+            .position(|part| part.0.matches(&output.accepts));
+        if let Some(matching_part_index) = matching_part_index {
+            world.remove_part(matching_part_index, &mut commands);
+        }
+    }
+
     let parts = world.parts();
     let mut states = vec![
         PhysicsState {
@@ -159,6 +190,7 @@ fn run_simulation(
         parts.len()
     ];
     let directions = BlockFacing::all();
+
     for (part_containing_tractor_beam, block) in
         all_blocks(parts).filter(|(_, x)| x.kind == BlockKind::TractorBeamSource)
     {
@@ -215,15 +247,6 @@ fn run_simulation(
                 }
                 break;
             }
-        }
-    }
-    for spawner in spawners.iter() {
-        let mut blocks = spawner.spawns.blocks.iter();
-        let parts = world.parts();
-        let should_spawn = !blocks
-            .any(|block| any_other_part_contains_block_at(parts, usize::MAX, block.position));
-        if should_spawn {
-            world.add_part(spawner.spawns.clone(), &mut commands, &*assets);
         }
     }
 }
