@@ -1,9 +1,13 @@
 use bevy::prelude::*;
 
-use super::{Cursor, InterfaceMode, InterfaceState};
+use super::{Cursor, InterfaceMode, InterfaceState, EDITING};
 use crate::block::BlockFacing;
 
-pub fn setup_interface_state(commands: &mut Commands, assets: &AssetServer, first_user_part: usize) {
+pub fn setup_interface_state(
+    commands: &mut Commands,
+    assets: &AssetServer,
+    first_user_part: usize,
+) {
     let scene = assets.load("blocks/cursor.glb#Scene0");
     let place_cursor = commands
         .spawn()
@@ -26,7 +30,7 @@ pub fn setup_interface_state(commands: &mut Commands, assets: &AssetServer, firs
         mode: InterfaceMode::Default,
         movement_keys: [false; 4],
         first_user_part,
-        currently_editing_part: first_user_part,
+        currently_editing_part: if EDITING { 0 } else { first_user_part },
         block_to_place: None,
         facing: BlockFacing::Px,
         holding_shift: false,

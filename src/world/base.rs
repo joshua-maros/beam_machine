@@ -36,19 +36,8 @@ impl World {
         }
     }
 
-    pub(super) fn new(
-        factory_floor: Structure,
-        commands: &mut Commands,
-        assets: &AssetServer,
-    ) -> Self {
-        let factory_floor_ent = spawn_structure(&factory_floor, commands, assets, false);
-        Self {
-            parts: vec![Part {
-                structure: factory_floor,
-                physical_instance: factory_floor_ent,
-                is_hologram: false,
-            }],
-        }
+    pub(super) fn new() -> Self {
+        Self { parts: vec![] }
     }
 
     pub fn set(&mut self, to: Self, commands: &mut Commands, assets: &AssetServer) {

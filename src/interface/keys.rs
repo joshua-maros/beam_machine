@@ -3,7 +3,7 @@ use bevy::{
     prelude::*,
 };
 
-use super::{util::directional_key_index, InterfaceState};
+use super::{util::directional_key_index, InterfaceState, EDITING};
 use crate::{
     block::{BlockFacing, BlockKind},
     simulation::SimulationState,
@@ -32,11 +32,22 @@ pub(super) fn update_block_keys(
     if event.state != ButtonState::Pressed || simulation_state.is_started() {
         return;
     }
-    match event.key_code {
-        Some(KeyCode::Escape) => state.block_to_place = None,
-        Some(KeyCode::Key1) => state.block_to_place = Some(BlockKind::Structure),
-        Some(KeyCode::Key2) => state.block_to_place = Some(BlockKind::TractorBeamSource),
-        _ => (),
+    if EDITING {
+        match event.key_code {
+            Some(KeyCode::Escape) => state.block_to_place = None,
+            Some(KeyCode::Key1) => state.block_to_place = Some(BlockKind::DecoStructure),
+            Some(KeyCode::Key2) => state.block_to_place = Some(BlockKind::DecoStructure2),
+            Some(KeyCode::Key3) => state.block_to_place = Some(BlockKind::DecoStructureInput),
+            Some(KeyCode::Key4) => state.block_to_place = Some(BlockKind::DecoStructureOutput),
+            _ => (),
+        }
+    } else {
+        match event.key_code {
+            Some(KeyCode::Escape) => state.block_to_place = None,
+            Some(KeyCode::Key1) => state.block_to_place = Some(BlockKind::Structure),
+            Some(KeyCode::Key2) => state.block_to_place = Some(BlockKind::TractorBeamSource),
+            _ => (),
+        }
     }
     if state.block_to_place.is_some() {
         match event.key_code {

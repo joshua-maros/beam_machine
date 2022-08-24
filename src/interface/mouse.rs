@@ -4,7 +4,7 @@ use bevy::{
 };
 use bevy_mod_raycast::Intersection;
 
-use super::{util::get_mouse_position_in_world, Cursor, InterfaceState};
+use super::{util::get_mouse_position_in_world, Cursor, InterfaceState, EDITING};
 use crate::{
     block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
     simulation::SimulationState,
@@ -105,7 +105,6 @@ fn place_block(
                 facing,
                 kind,
                 position: above_cursor,
-                hologram: false,
             })
         },
         commands,
@@ -120,7 +119,12 @@ fn remove_block(
     assets: &AssetServer,
     state: &InterfaceState,
 ) {
-    for part in state.first_user_part..world.parts().len() {
+    let start = if EDITING {
+        0
+    } else {
+        state.first_user_part
+    };
+    for part in start..world.parts().len() {
         world.modify_part(
             part,
             |part| part.remove_blocks_at(below_cursor),

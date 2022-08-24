@@ -89,7 +89,6 @@ pub struct Block {
     pub kind: BlockKind,
     pub facing: BlockFacing,
     pub position: Position,
-    pub hologram: bool,
 }
 
 #[derive(Component)]

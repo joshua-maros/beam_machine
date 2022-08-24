@@ -32,6 +32,10 @@ impl Structure {
         }
     }
 
+    pub fn get_block_at(&self, position: Position) -> Option<&Block> {
+        self.blocks.iter().find(|x| x.position == position)
+    }
+
     pub fn remove_blocks_at(&mut self, position: Position) {
         self.debug_assert_invariants();
         for i in 0..self.blocks.len() {
