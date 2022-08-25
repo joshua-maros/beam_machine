@@ -29,7 +29,7 @@ fn main() {
         .add_plugin(InterfacePlugin)
         .insert_resource(AmbientLight {
             color: Color::hex("264653").unwrap(),
-            brightness: 1.0,
+            brightness: 5.0,
         })
         .insert_resource(ClearColor(Color::hex("264653").unwrap() * 0.6))
         .add_system_to_stage(
