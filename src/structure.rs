@@ -121,8 +121,12 @@ pub fn spawn_structure(
         .id();
 
     for block in &structure.blocks {
-        if block.kind == BlockKind::TractorBeamSource {
-            let scene = assets.load("tractor_beam.glb#Scene0");
+        if block.kind == BlockKind::TractorBeamSource || block.kind == BlockKind::WelderBeamSource {
+            let scene = match block.kind {
+                BlockKind::TractorBeamSource => assets.load("tractor_beam.glb#Scene0"),
+                BlockKind::WelderBeamSource => assets.load("welder_beam.glb#Scene0"),
+                _ => panic!(),
+            };
             let beam = commands
                 .spawn()
                 .insert(Beam { for_block: *block })

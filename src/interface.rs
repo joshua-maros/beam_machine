@@ -100,6 +100,7 @@ fn export_block(block: &Block) -> String {
         BlockKind::Structure => 's',
         BlockKind::Activator => 'a',
         BlockKind::TractorBeamSource => 't',
+        BlockKind::WelderBeamSource => 'w',
         BlockKind::LaserSource => 'l',
         BlockKind::LaserSensor => 'n',
     };
@@ -153,6 +154,7 @@ pub fn import_level(world: &mut World, commands: &mut Commands, assets: &AssetSe
                         's' => BlockKind::Structure,
                         'a' => BlockKind::Activator,
                         't' => BlockKind::TractorBeamSource,
+                        'w' => BlockKind::WelderBeamSource,
                         'l' => BlockKind::LaserSource,
                         'n' => BlockKind::LaserSensor,
                         _ => panic!(),

@@ -202,6 +202,29 @@ fn run_simulation(
     }
 
     let parts = world.parts();
+    for (part_containing_welder, block) in
+        all_blocks(parts).filter(|(_, x)| x.kind == BlockKind::WelderBeamSource)
+    {
+        let bp = block.position;
+        let o = block.facing.offset();
+        let (mut transform, _) = beams.iter_mut().find(|x| &x.1.for_block == block).unwrap();
+        transform.scale = Vec3::ZERO;
+        for distance in 1..100 {
+            let position = (
+                bp.0 + distance * o.0,
+                bp.1 + distance * o.1,
+                bp.2 + distance * o.2,
+            );
+            if let Some(part_index) = find_part_containing_block_at(parts, position) {
+                transform.scale = Vec3::new(distance as f32 - 0.5, 1.0, 1.0);
+                if part_index <= 0{
+                    break;
+                }
+            }
+        }
+    }
+
+    let parts = world.parts();
     let mut states = vec![
         PhysicsState {
             can_move: [false; 6],
@@ -230,6 +253,7 @@ fn run_simulation(
                 bp.2 + distance * o.2,
             );
             if let Some(part_index) = find_part_containing_block_at(parts, position) {
+                transform.scale = Vec3::new(distance as f32 - 0.5, 1.0, 1.0);
                 if part_index == part_containing_tractor_beam {
                     continue;
                 }
@@ -238,7 +262,6 @@ fn run_simulation(
                 if ftb.0 == distance {
                     ftb.1 = part_containing_tractor_beam;
                 }
-                transform.scale = Vec3::new(distance as f32 - 0.5, 1.0, 1.0);
                 break;
             }
         }

@@ -14,6 +14,7 @@ pub enum BlockKind {
     Structure,
     Activator,
     TractorBeamSource,
+    WelderBeamSource,
     LaserSource,
     LaserSensor,
 }
@@ -28,6 +29,7 @@ impl BlockKind {
             Self::Structure => "blocks/structure.glb#Scene0",
             Self::Activator => "blocks/activator.glb#Scene0",
             Self::TractorBeamSource => "blocks/tractor_beam_source.glb#Scene0",
+            Self::WelderBeamSource => "blocks/welder_beam_source.glb#Scene0",
             Self::LaserSource => "blocks/laser_source.glb#Scene0",
             Self::LaserSensor => "blocks/laser_sensor.glb#Scene0",
         }

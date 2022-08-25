@@ -188,6 +188,7 @@ fn setup_light(commands: &mut Commands) {
     commands.spawn().insert_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
             shadows_enabled: true,
+            illuminance: 10_000.0,
             ..Default::default()
         },
         transform: Transform::from_rotation(Quat::from_euler(EulerRot::ZYX, tau8, 0.0, tau8)),

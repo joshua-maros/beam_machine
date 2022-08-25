@@ -46,6 +46,7 @@ pub(super) fn update_block_keys(
             Some(KeyCode::Escape) => state.block_to_place = None,
             Some(KeyCode::Key1) => state.block_to_place = Some(BlockKind::Structure),
             Some(KeyCode::Key2) => state.block_to_place = Some(BlockKind::TractorBeamSource),
+            Some(KeyCode::Key3) => state.block_to_place = Some(BlockKind::WelderBeamSource),
             _ => (),
         }
     }

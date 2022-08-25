@@ -27,6 +27,11 @@ fn main() {
         .add_plugin(InterfacePlugin)
         .add_plugin(SetupPlugin)
         .add_plugin(SimulationPlugin)
+        .insert_resource(AmbientLight {
+            color: Color::hex("264653").unwrap(),
+            brightness: 1.0,
+        })
+        .insert_resource(ClearColor(Color::hex("264653").unwrap() * 0.6))
         .add_system_to_stage(
             CoreStage::First,
             update_raycast_position_from_cursor.before(RaycastSystem::BuildRays::<BlockRaycastSet>),
