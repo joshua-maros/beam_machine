@@ -13,6 +13,7 @@ pub struct SimulationState {
     started: bool,
     running: bool,
     tick_timer: f32,
+    existing_parts: usize,
 }
 
 impl SimulationState {
@@ -45,6 +46,7 @@ pub fn begin_simulation(
     }
     snapshot.0 = world.clone();
     simulation_state.started = true;
+    simulation_state.existing_parts = world.parts().len();
 }
 
 pub fn end_simulation(
@@ -201,14 +203,14 @@ fn run_simulation(
         }
     }
 
-    let parts = world.parts();
-    for (part_containing_welder, block) in
-        all_blocks(parts).filter(|(_, x)| x.kind == BlockKind::WelderBeamSource)
-    {
+    let parts: Vec<_> = world.parts().iter().cloned().collect();
+    for (_, block) in all_blocks(&parts).filter(|(_, x)| x.kind == BlockKind::WelderBeamSource) {
+        let parts = world.parts();
         let bp = block.position;
         let o = block.facing.offset();
         let (mut transform, _) = beams.iter_mut().find(|x| &x.1.for_block == block).unwrap();
         transform.scale = Vec3::ZERO;
+        let mut intersects = HashSet::new();
         for distance in 1..100 {
             let position = (
                 bp.0 + distance * o.0,
@@ -217,10 +219,15 @@ fn run_simulation(
             );
             if let Some(part_index) = find_part_containing_block_at(parts, position) {
                 transform.scale = Vec3::new(distance as f32 - 0.5, 1.0, 1.0);
-                if part_index <= 0{
+                if part_index < state.existing_parts {
                     break;
+                } else {
+                    intersects.insert(part_index);
                 }
             }
+        }
+        if intersects.len() > 1 {
+            world.merge_parts(intersects.iter().copied(), &mut commands, &*assets);
         }
     }
 
@@ -255,7 +262,7 @@ fn run_simulation(
             if let Some(part_index) = find_part_containing_block_at(parts, position) {
                 transform.scale = Vec3::new(distance as f32 - 0.5, 1.0, 1.0);
                 if part_index == part_containing_tractor_beam {
-                    continue;
+                    break;
                 }
                 let ftb = &mut states[part_index].farthest_tractor_beam[pull_direction_index];
                 ftb.0 = ftb.0.max(distance);
@@ -339,6 +346,7 @@ impl Plugin for SimulationPlugin {
             started: false,
             running: false,
             tick_timer: 0.0,
+            existing_parts: 0,
         });
         app.add_system(run_simulation);
     }

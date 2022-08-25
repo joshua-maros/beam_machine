@@ -56,11 +56,33 @@ impl World {
         self.debug_assert_invariants();
     }
 
-    pub fn remove_part(&mut self, index: usize, commands: &mut Commands) {
+    pub fn merge_parts(
+        &mut self,
+        parts: impl Iterator<Item = usize>,
+        commands: &mut Commands,
+        assets: &AssetServer,
+    ) {
+        let mut parts: Vec<_> = parts.into_iter().collect();
+        parts.sort();
+        parts.reverse();
+        let parts: Vec<_> = parts
+            .into_iter()
+            .map(|index| self.remove_part(index, commands))
+            .collect();
+        let mut new_structure = Structure {
+            blocks: parts
+                .into_iter()
+                .flat_map(|part| part.structure.blocks.into_iter())
+                .collect(),
+        };
+        self.add_part(new_structure, commands, assets);
+    }
+
+    pub fn remove_part(&mut self, index: usize, commands: &mut Commands) -> Part {
         commands
             .entity(self.parts[index].physical_instance)
             .despawn_recursive();
-        self.parts.remove(index);
+        self.parts.remove(index)
     }
 
     pub fn animate_part(&mut self, index: usize, animation: Animation, commands: &mut Commands) {
