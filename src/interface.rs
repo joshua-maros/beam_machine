@@ -264,8 +264,8 @@ pub struct InterfacePlugin;
 
 impl Plugin for InterfacePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(interface_system)
-            .add_system(simulation_interface_system)
+        app.add_system_to_stage("asdf", interface_system)
+            .add_system_to_stage("asdf", simulation_interface_system)
             .add_system(switch_part_system);
     }
 }

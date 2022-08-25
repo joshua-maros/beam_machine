@@ -24,9 +24,9 @@ fn main() {
         .add_plugin(DefaultRaycastingPlugin::<BlockRaycastSet>::default())
         .add_plugin(AnimationPlugin)
         .add_plugin(HologramifyPlugin)
-        .add_plugin(InterfacePlugin)
         .add_plugin(SetupPlugin)
         .add_plugin(SimulationPlugin)
+        .add_plugin(InterfacePlugin)
         .insert_resource(AmbientLight {
             color: Color::hex("264653").unwrap(),
             brightness: 1.0,

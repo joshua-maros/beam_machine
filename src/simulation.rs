@@ -1,6 +1,11 @@
 use std::collections::VecDeque;
 
-use bevy::{prelude::*, utils::HashSet};
+use bevy::{
+    ecs::schedule::{ParallelExecutor, ParallelSystemExecutor},
+    prelude::*,
+    scene::{scene_spawner, scene_spawner_system},
+    utils::HashSet,
+};
 
 use crate::{
     animations::Animation,
@@ -353,6 +358,11 @@ impl Plugin for SimulationPlugin {
             tick_timer: 0.0,
             existing_parts: 0,
         });
-        app.add_system(run_simulation);
+        app.add_stage_before(
+            CoreStage::PreUpdate,
+            "asdf",
+            SystemStage::new(Box::new(ParallelExecutor::default())),
+        );
+        app.add_system_to_stage("asdf", run_simulation.before(scene_spawner));
     }
 }
