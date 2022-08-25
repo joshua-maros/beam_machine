@@ -23,7 +23,7 @@ use crate::{
 };
 
 pub const LEVEL: usize = 6;
-pub const EDITING: bool = false;
+pub const EDITING: bool = true;
 
 pub fn interface_system(
     mut commands: Commands,
