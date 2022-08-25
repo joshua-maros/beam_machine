@@ -205,13 +205,13 @@ fn run_simulation(
 
     let parts: Vec<_> = world.parts().iter().cloned().collect();
     for (_, block) in all_blocks(&parts).filter(|(_, x)| x.kind == BlockKind::WelderBeamSource) {
-        let parts = world.parts();
         let bp = block.position;
         let o = block.facing.offset();
         let (mut transform, _) = beams.iter_mut().find(|x| &x.1.for_block == block).unwrap();
         transform.scale = Vec3::ZERO;
         let mut intersects = HashSet::new();
         for distance in 1..100 {
+            let parts = world.parts();
             let position = (
                 bp.0 + distance * o.0,
                 bp.1 + distance * o.1,
@@ -220,14 +220,19 @@ fn run_simulation(
             if let Some(part_index) = find_part_containing_block_at(parts, position) {
                 transform.scale = Vec3::new(distance as f32 - 0.5, 1.0, 1.0);
                 if part_index < state.existing_parts {
+                    if intersects.len() > 1 {
+                        world.merge_parts(intersects.iter().copied(), &mut commands, &*assets);
+                    }
                     break;
                 } else {
                     intersects.insert(part_index);
                 }
+            } else {
+                if intersects.len() > 1 {
+                    world.merge_parts(intersects.iter().copied(), &mut commands, &*assets);
+                }
+                intersects.clear();
             }
-        }
-        if intersects.len() > 1 {
-            world.merge_parts(intersects.iter().copied(), &mut commands, &*assets);
         }
     }
 
