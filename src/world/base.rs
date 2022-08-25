@@ -26,11 +26,12 @@ impl World {
             }
             part.structure.debug_assert_invariants();
             for block in &part.structure.blocks {
-                debug_assert!(
-                    !positions.contains(&block.position),
-                    "Part {} overlaps with a previous part or the factory floor!",
-                    index
-                );
+                if positions.contains(&block.position) {
+                    println!(
+                        "Part {} overlaps with a previous part or the factory floor!",
+                        index
+                    );
+                }
                 positions.insert(block.position);
             }
         }

@@ -22,7 +22,7 @@ use crate::{
     world::{World, WorldSnapshot},
 };
 
-pub const LEVEL: usize = 3;
+pub const LEVEL: usize = 4;
 pub const EDITING: bool = false;
 
 pub fn interface_system(
