@@ -3,13 +3,14 @@ use bevy::{
     prelude::*,
 };
 
-use super::{util::directional_key_index, InterfaceState, EDITING};
+use super::{util::directional_key_index, InterfaceState, EDITING, ChangeToMenuRequest};
 use crate::{
     block::{BlockFacing, BlockKind},
     simulation::SimulationState,
 };
 
 pub(super) fn update_directional_key(
+    commands: &mut Commands,
     event: &KeyboardInput,
     state: &mut InterfaceState,
     simulation_state: &SimulationState,
@@ -21,6 +22,8 @@ pub(super) fn update_directional_key(
     let directional_key = directional_key_index(event);
     if let Some(key) = directional_key {
         state.movement_keys[key] = event.state == ButtonState::Pressed;
+    } else if event.key_code == Some(KeyCode::Escape) && event.state == ButtonState::Pressed {
+        commands.insert_resource(ChangeToMenuRequest);
     }
 }
 

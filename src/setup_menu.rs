@@ -1,6 +1,32 @@
-use bevy::prelude::*;
+use bevy::{
+    input::{mouse::MouseButtonInput, ButtonState},
+    prelude::*,
+};
 
 use crate::GameState;
+
+struct GlobalState {
+    completed: [bool; 10],
+}
+
+impl GlobalState {
+    pub fn unlocked(&self, index: usize) -> bool {
+        let requirements = match index {
+            0 => vec![],
+            1 => vec![0],
+            2 => vec![1],
+            3 => vec![2],
+            4 => vec![2, 3],
+            5 => vec![2, 3],
+            6 => vec![4, 5],
+            7 => vec![5],
+            8 => vec![5],
+            9 => vec![7],
+            _ => panic!(),
+        };
+        requirements.iter().all(|&req| self.completed[req])
+    }
+}
 
 struct MenuState {
     hovers: Vec<(Entity, f32)>,
@@ -9,7 +35,7 @@ struct MenuState {
 #[derive(Component)]
 struct MenuEntity;
 
-fn setup(mut commands: Commands, assets: Res<AssetServer>) {
+fn setup(mut commands: Commands, assets: Res<AssetServer>, global_state: Res<GlobalState>) {
     commands
         .spawn()
         .insert_bundle(Camera2dBundle::default())
@@ -91,17 +117,54 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             })
             .insert(MenuEntity)
             .id();
+        commands.entity(root).add_child(ent);
         state.hovers.push((ent, 0.0));
+    }
+    for index in 1..10 {
+        if global_state.unlocked(index) {
+            continue;
+        }
+        let lock = assets.load(&format!("menu/locked{}.png", index));
+        let ent = commands
+            .spawn()
+            .insert_bundle(ImageBundle {
+                image: UiImage(lock),
+                style: Style {
+                    aspect_ratio: Some(16.0 / 9.0),
+                    margin: UiRect {
+                        bottom: Val::Auto,
+                        ..Default::default()
+                    },
+                    size: Size {
+                        width: Val::Percent(100.0),
+                        height: Val::Auto,
+                    },
+                    position: UiRect {
+                        left: Val::Percent(0.0),
+                        bottom: Val::Percent(0.0),
+                        ..Default::default()
+                    },
+                    position_type: PositionType::Absolute,
+                    ..Default::default()
+                },
+                color: UiColor(Color::rgba(1.0, 1.0, 1.0, 1.0)),
+                ..Default::default()
+            })
+            .insert(MenuEntity)
+            .id();
         commands.entity(root).add_child(ent);
     }
     commands.insert_resource(state);
 }
 
 fn update_menu(
+    mut commands: Commands,
     mut hovers: Query<&mut UiColor>,
-    mut state: ResMut<MenuState>,
+    mut menu_state: ResMut<MenuState>,
+    global_state: Res<GlobalState>,
     time: Res<Time>,
     windows: Res<Windows>,
+    mut mouse_button_events: EventReader<MouseButtonInput>,
 ) {
     let d = time.delta_seconds() * 4.0;
     let win = windows.get_primary().unwrap();
@@ -122,11 +185,20 @@ fn update_menu(
         Vec2::new(1185.0, 375.0),
         Vec2::new(1650.0, 618.0),
     ];
-    for (index, (entity, opacity)) in state.hovers.iter_mut().enumerate() {
+    let mouse_pressed = mouse_button_events
+        .iter()
+        .any(|e| e.button == MouseButton::Left && e.state == ButtonState::Pressed);
+    for (index, (entity, opacity)) in menu_state.hovers.iter_mut().enumerate() {
         let size = 0.17 * width;
         let start = positions[index] - Vec2::new(0.0, size);
         let end = positions[index] + Vec2::new(size, 0.0);
-        if mouse_pos.cmpge(start).all() && mouse_pos.cmple(end).all() {
+        if mouse_pos.cmpge(start).all()
+            && mouse_pos.cmple(end).all()
+            && global_state.unlocked(index)
+        {
+            if mouse_pressed {
+                commands.insert_resource(ChangeToLevelRequest);
+            }
             *opacity += d;
         } else {
             *opacity -= d / 3.0;
@@ -143,10 +215,27 @@ fn cleanup(mut commands: Commands, entities: Query<Entity, With<MenuEntity>>) {
     }
 }
 
+pub struct ChangeToLevelRequest;
+
+fn set_state(
+    mut commands: Commands,
+    request: Option<Res<ChangeToLevelRequest>>,
+    mut game_state: ResMut<State<GameState>>,
+) {
+    if request.is_some() {
+        game_state.set(GameState::Level).unwrap();
+        commands.remove_resource::<ChangeToLevelRequest>();
+    }
+}
+
 pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
+        app.insert_resource(GlobalState {
+            completed: [false; 10],
+        });
+        app.add_system_to_stage(CoreStage::First, set_state);
         app.add_system_set_to_stage(
             "asdf",
             SystemSet::on_enter(GameState::Menu).with_system(setup),

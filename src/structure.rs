@@ -4,7 +4,7 @@ use bevy_mod_raycast::RayCastMesh;
 use crate::{
     block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
     hologramify::PleaseHologramifyThis,
-    world::Position,
+    world::Position, setup::LevelEntity,
 };
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
@@ -97,7 +97,8 @@ fn spawn_block(
         // This will not be rendered since there is no material attached.
         .insert(bbox)
         .insert(RayCastMesh::<BlockRaycastSet>::default())
-        .insert(NotShadowCaster);
+        .insert(NotShadowCaster)
+        .insert(LevelEntity);
     if is_hologram {
         commands.insert(PleaseHologramifyThis::default());
     }
@@ -118,6 +119,7 @@ pub fn spawn_structure(
     let root = commands
         .spawn()
         .insert_bundle(SpatialBundle::default())
+        .insert(LevelEntity)
         .id();
 
     for block in &structure.blocks {
@@ -140,6 +142,7 @@ pub fn spawn_structure(
                     .with_rotation(block.facing.rotation()),
                     ..Default::default()
                 })
+                .insert(LevelEntity)
                 .id();
             commands.entity(root).add_child(beam);
         }

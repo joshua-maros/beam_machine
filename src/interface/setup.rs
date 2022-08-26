@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::{Cursor, InterfaceMode, InterfaceState, EDITING};
-use crate::block::BlockFacing;
+use crate::{block::BlockFacing, setup::LevelEntity};
 
 pub fn setup_interface_state(
     commands: &mut Commands,
@@ -16,6 +16,7 @@ pub fn setup_interface_state(
             ..Default::default()
         })
         .insert(Cursor)
+        .insert(LevelEntity)
         .id();
     let scene = assets.load("blocks/remove_cursor.glb#Scene0");
     let remove_cursor = commands
@@ -25,6 +26,7 @@ pub fn setup_interface_state(
             ..Default::default()
         })
         .insert(Cursor)
+        .insert(LevelEntity)
         .id();
     commands.insert_resource(InterfaceState {
         mode: InterfaceMode::Default,

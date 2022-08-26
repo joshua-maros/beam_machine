@@ -40,7 +40,7 @@ pub fn interface_system(
     time: Res<Time>,
 ) {
     for event in key_events.iter() {
-        update_directional_key(event, &mut *state, &*simulation_state);
+        update_directional_key(&mut commands, event, &mut *state, &*simulation_state);
         update_block_keys(event, &mut *state, &*simulation_state);
         if event.key_code == Some(KeyCode::LShift) || event.key_code == Some(KeyCode::RShift) {
             if event.state == ButtonState::Pressed {
@@ -246,7 +246,6 @@ pub fn switch_part_system(
                     world.add_part(s, &mut commands, &*assets);
                 }
             }
-            println!("{:#?}", *cep);
         } else if event.key_code == Some(KeyCode::Minus) && event.state == ButtonState::Pressed {
             if EDITING {
                 if *cep > 0 {
@@ -256,8 +255,20 @@ pub fn switch_part_system(
                 *cep -= 1;
                 *cep = (*cep).max(state.first_user_part);
             }
-            println!("{:#?}", *cep);
         }
+    }
+}
+
+pub struct ChangeToMenuRequest;
+
+fn set_state(
+    mut commands: Commands,
+    request: Option<Res<ChangeToMenuRequest>>,
+    mut game_state: ResMut<State<GameState>>,
+) {
+    if request.is_some() {
+        game_state.set(GameState::Menu).unwrap();
+        commands.remove_resource::<ChangeToMenuRequest>();
     }
 }
 
@@ -265,6 +276,7 @@ pub struct InterfacePlugin;
 
 impl Plugin for InterfacePlugin {
     fn build(&self, app: &mut App) {
+        app.add_system_to_stage(CoreStage::First, set_state);
         app.add_system_set_to_stage(
             "asdf",
             SystemSet::on_update(GameState::Level)

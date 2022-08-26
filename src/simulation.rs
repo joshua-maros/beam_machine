@@ -12,7 +12,7 @@ use crate::{
     block::{Block, BlockFacing, BlockKind},
     structure::{Beam, Structure},
     world::{Part, Position, World, WorldSnapshot},
-    GameState,
+    GameState, setup::LevelEntity,
 };
 
 pub struct SimulationState {
@@ -150,7 +150,7 @@ pub fn make_input(
     assets: &AssetServer,
 ) {
     world.add_hologram(spawns.clone(), commands, assets);
-    commands.spawn().insert(Input { spawns });
+    commands.spawn().insert(Input { spawns }).insert(LevelEntity);
 }
 
 #[derive(Clone, Debug, Component)]
@@ -165,7 +165,7 @@ pub fn make_output(
     assets: &AssetServer,
 ) {
     world.add_hologram(accepts.clone(), commands, assets);
-    commands.spawn().insert(Output { accepts });
+    commands.spawn().insert(Output { accepts }).insert(LevelEntity);
 }
 
 fn run_simulation(

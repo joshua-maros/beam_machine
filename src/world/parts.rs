@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::{Part, World};
 use crate::{
     animations::Animation,
-    structure::{spawn_structure, Structure},
+    structure::{spawn_structure, Structure}, setup::LevelEntity,
 };
 
 impl World {
@@ -24,6 +24,7 @@ impl World {
         let ent = commands
             .spawn()
             .insert_bundle(SpatialBundle::default())
+            .insert(LevelEntity)
             .id();
         let index = self.parts.len();
         self.parts.push(Part {
