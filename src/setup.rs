@@ -17,7 +17,7 @@ use bevy::{
 };
 use bevy_mod_raycast::RayCastSource;
 
-use crate::block::BlockRaycastSet;
+use crate::{block::BlockRaycastSet, interface::InterfaceState, GameState};
 
 pub fn setup(
     mut commands: Commands,
@@ -103,6 +103,7 @@ fn setup_main_camera(commands: &mut Commands, render_target: Handle<Image>) {
             },
             ..Default::default()
         })
+        .insert(LevelEntity)
         .insert(RenderLayers::from_layers(&[0]))
         .insert(RayCastSource::<BlockRaycastSet>::default());
 }
@@ -123,6 +124,7 @@ fn setup_holographic_camera(commands: &mut Commands, render_target: Handle<Image
             },
             ..Default::default()
         })
+        .insert(LevelEntity)
         .insert(RenderLayers::from_layers(&[1]));
 }
 
@@ -170,6 +172,7 @@ fn setup_post_process_camera(
             },
             ..default()
         })
+        .insert(LevelEntity)
         .insert(post_processing_pass_layer);
     commands
         .spawn()
@@ -180,20 +183,35 @@ fn setup_post_process_camera(
             },
             ..Default::default()
         })
+        .insert(LevelEntity)
         .insert(post_processing_pass_layer);
 }
 
 fn setup_light(commands: &mut Commands) {
     let tau8 = TAU / 8.0;
-    commands.spawn().insert_bundle(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            shadows_enabled: true,
-            illuminance: 10_000.0,
+    commands
+        .spawn()
+        .insert_bundle(DirectionalLightBundle {
+            directional_light: DirectionalLight {
+                shadows_enabled: true,
+                illuminance: 10_000.0,
+                ..Default::default()
+            },
+            transform: Transform::from_rotation(Quat::from_euler(EulerRot::ZYX, tau8, 0.0, tau8)),
             ..Default::default()
-        },
-        transform: Transform::from_rotation(Quat::from_euler(EulerRot::ZYX, tau8, 0.0, tau8)),
-        ..Default::default()
-    });
+        })
+        .insert(LevelEntity);
+}
+
+#[derive(Component)]
+pub struct LevelEntity;
+
+fn cleanup(mut commands: Commands, entities: Query<Entity, With<LevelEntity>>) {
+    commands.remove_resource::<InterfaceState>();
+    commands.remove_resource::<World>();
+    for entity in entities.iter() {
+        commands.entity(entity).despawn_recursive();
+    }
 }
 
 pub struct SetupPlugin;
@@ -201,6 +219,10 @@ pub struct SetupPlugin;
 impl Plugin for SetupPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(Material2dPlugin::<PostProcessMaterial>::default())
-            .add_startup_system(setup);
+            .add_system_set_to_stage(
+                "asdf",
+                SystemSet::on_enter(GameState::Level).with_system(setup),
+            )
+            .add_system_set(SystemSet::on_exit(GameState::Level).with_system(cleanup));
     }
 }

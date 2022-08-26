@@ -20,10 +20,11 @@ use crate::{
     simulation::{self, make_input, make_output, SimulationState},
     structure::Structure,
     world::{World, WorldSnapshot},
+    GameState,
 };
 
 pub const LEVEL: usize = 6;
-pub const EDITING: bool = true;
+pub const EDITING: bool = false;
 
 pub fn interface_system(
     mut commands: Commands,
@@ -264,8 +265,12 @@ pub struct InterfacePlugin;
 
 impl Plugin for InterfacePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_to_stage("asdf", interface_system)
-            .add_system_to_stage("asdf", simulation_interface_system)
-            .add_system(switch_part_system);
+        app.add_system_set_to_stage(
+            "asdf",
+            SystemSet::on_update(GameState::Level)
+                .with_system(interface_system)
+                .with_system(simulation_interface_system)
+                .with_system(switch_part_system),
+        );
     }
 }

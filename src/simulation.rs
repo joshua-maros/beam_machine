@@ -12,6 +12,7 @@ use crate::{
     block::{Block, BlockFacing, BlockKind},
     structure::{Beam, Structure},
     world::{Part, Position, World, WorldSnapshot},
+    GameState,
 };
 
 pub struct SimulationState {
@@ -363,6 +364,10 @@ impl Plugin for SimulationPlugin {
             "asdf",
             SystemStage::new(Box::new(ParallelExecutor::default())),
         );
-        app.add_system_to_stage("asdf", run_simulation.before(scene_spawner));
+        app.add_system_set_to_stage("asdf", State::<GameState>::get_driver());
+        // app.add_system_set_to_stage(
+        //     "asdf",
+        //     SystemSet::on_update(GameState::Level).with_system(run_simulation),
+        // );
     }
 }

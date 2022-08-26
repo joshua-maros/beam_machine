@@ -99,7 +99,7 @@ fn spawn_block(
         .insert(RayCastMesh::<BlockRaycastSet>::default())
         .insert(NotShadowCaster);
     if is_hologram {
-        commands.insert(PleaseHologramifyThis);
+        commands.insert(PleaseHologramifyThis::default());
     }
     commands.id()
 }
