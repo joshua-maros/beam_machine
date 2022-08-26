@@ -30,7 +30,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(ObjPlugin)
         .add_plugin(DefaultRaycastingPlugin::<BlockRaycastSet>::default())
-        .add_state(GameState::Level)
+        .add_state(GameState::Menu)
         .add_plugin(SimulationPlugin)
         .add_plugin(AnimationPlugin)
         .add_plugin(HologramifyPlugin)

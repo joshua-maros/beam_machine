@@ -223,6 +223,9 @@ impl Plugin for SetupPlugin {
                 "asdf",
                 SystemSet::on_enter(GameState::Level).with_system(setup),
             )
-            .add_system_set(SystemSet::on_exit(GameState::Level).with_system(cleanup));
+            .add_system_set_to_stage(
+                "asdf",
+                SystemSet::on_exit(GameState::Level).with_system(cleanup),
+            );
     }
 }
