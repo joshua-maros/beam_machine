@@ -12,3 +12,6 @@ bevy_obj = "0.8.0"
 
 [profile.dev.package."*"]
 opt-level = 3
+
+[patch.crates-io]
+wgpu = { git = "https://github.com/mockersf/wgpu/", branch = "unconditional-clear-workaround" }

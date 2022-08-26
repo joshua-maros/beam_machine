@@ -23,7 +23,7 @@ use crate::{
     GameState,
 };
 
-pub const LEVEL: usize = 6;
+pub const LEVEL: usize = 7;
 pub const EDITING: bool = false;
 
 pub fn interface_system(

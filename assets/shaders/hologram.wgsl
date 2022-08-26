@@ -22,5 +22,5 @@ fn fragment(
     var output_color = 3.0 * textureSample(regular_blocks, regular_blocks_sampler, uv)
         + strength * clamp(strength * 3.0 * textureSample(holo_blocks, holo_blocks_sampler, uv) - 0.1, vec4(0.0), vec4(1.0));
 
-    return output_color;
+    return output_color * 0.8;
 }
