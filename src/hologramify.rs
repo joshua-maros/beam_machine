@@ -5,8 +5,8 @@ use bevy::{
     scene::{Scene, SceneInstance},
 };
 
-#[derive(Component)]
-pub struct PleaseHologramifyThis;
+#[derive(Component, Default)]
+pub struct PleaseHologramifyThis(u8);
 
 fn insert_render_layers(commands: &mut Commands, onto: Entity, children_query: &Query<&Children>) {
     commands
@@ -22,12 +22,16 @@ fn insert_render_layers(commands: &mut Commands, onto: Entity, children_query: &
 
 fn hologramify_system(
     mut commands: Commands,
-    to_hologramify: Query<(Entity, &PleaseHologramifyThis), With<SceneInstance>>,
+    mut to_hologramify: Query<(Entity, &mut PleaseHologramifyThis), With<SceneInstance>>,
     children_query: Query<&Children>,
 ) {
-    for (entity, _) in to_hologramify.iter() {
+    for (entity, mut pht) in to_hologramify.iter_mut() {
         insert_render_layers(&mut commands, entity, &children_query);
-        commands.entity(entity).remove::<PleaseHologramifyThis>();
+        pht.0 += 1;
+        // Why is this necessary? WHY?!
+        if pht.0 == 2 {
+            commands.entity(entity).remove::<PleaseHologramifyThis>();
+        }
     }
 }
 
@@ -35,6 +39,6 @@ pub struct HologramifyPlugin;
 
 impl Plugin for HologramifyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(hologramify_system);
+        app.add_system_to_stage(CoreStage::PostUpdate, hologramify_system);
     }
 }
