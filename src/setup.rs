@@ -17,7 +17,10 @@ use bevy::{
 };
 use bevy_mod_raycast::RayCastSource;
 
-use crate::{block::BlockRaycastSet, interface::InterfaceState, GameState};
+use crate::{
+    block::BlockRaycastSet, interface::InterfaceState, setup_menu::GlobalState,
+    simulation::SimulationState, GameState,
+};
 
 pub fn setup(
     mut commands: Commands,
@@ -26,6 +29,7 @@ pub fn setup(
     mut images: ResMut<Assets<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<PostProcessMaterial>>,
+    global_state: Res<GlobalState>,
 ) {
     let (target, holo_target, size) = setup_render_targets(&mut commands, &*windows, &mut *images);
     setup_cameras(
@@ -37,8 +41,16 @@ pub fn setup(
         size,
     );
     setup_light(&mut commands);
-    let first_user_part = crate::world::setup::setup_world(&mut commands, &*assets);
+    let first_user_part = crate::world::setup::setup_world(&mut commands, &*assets, &*global_state);
     crate::interface::setup::setup_interface_state(&mut commands, &*assets, first_user_part);
+    commands.insert_resource(SimulationState {
+        started: false,
+        running: false,
+        tick_timer: 0.0,
+        existing_parts: 0,
+        collected_outputs: 0,
+        cycles: 0,
+    });
 }
 
 fn setup_render_targets(
@@ -208,6 +220,7 @@ pub struct LevelEntity;
 
 fn cleanup(mut commands: Commands, entities: Query<Entity, With<LevelEntity>>) {
     commands.remove_resource::<InterfaceState>();
+    commands.remove_resource::<SimulationState>();
     commands.remove_resource::<World>();
     for entity in entities.iter() {
         commands.entity(entity).despawn_recursive();

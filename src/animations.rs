@@ -10,13 +10,15 @@ pub enum Animation {
 
 fn animation_system(
     mut animated_objs: Query<(&mut Transform, &Animation)>,
-    simulation_state: Res<SimulationState>,
+    simulation_state: Option<Res<SimulationState>>,
 ) {
-    for (mut transform, animation) in animated_objs.iter_mut() {
-        match animation {
-            Animation::Stationary => transform.translation = Vec3::ZERO,
-            Animation::Lerp(a, b) => {
-                transform.translation = a.lerp(*b, simulation_state.tick_progress())
+    if let Some(simulation_state) = simulation_state {
+        for (mut transform, animation) in animated_objs.iter_mut() {
+            match animation {
+                Animation::Stationary => transform.translation = Vec3::ZERO,
+                Animation::Lerp(a, b) => {
+                    transform.translation = a.lerp(*b, simulation_state.tick_progress())
+                }
             }
         }
     }

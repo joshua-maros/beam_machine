@@ -17,13 +17,13 @@ use self::{
 };
 use crate::{
     block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
+    setup_menu::GlobalState,
     simulation::{self, make_input, make_output, SimulationState},
     structure::Structure,
     world::{World, WorldSnapshot},
     GameState,
 };
 
-pub const LEVEL: usize = 7;
 pub const EDITING: bool = false;
 
 pub fn interface_system(
@@ -76,7 +76,7 @@ pub fn simulation_interface_system(
     for event in key_events.iter() {
         if event.key_code == Some(KeyCode::Space) && event.state == ButtonState::Pressed {
             if EDITING {
-                export_level(&*world);
+                // export_level(&*world);
             } else if simulation_state.is_started() {
                 simulation::end_simulation(
                     &mut *world,
@@ -116,8 +116,17 @@ fn export_block(block: &Block) -> String {
     format!("{}{}", c, f)
 }
 
-pub fn import_level(world: &mut World, commands: &mut Commands, assets: &AssetServer) {
-    let input = std::fs::read_to_string(format!("assets/levels/{}.level.txt", LEVEL)).unwrap();
+pub fn import_level(
+    world: &mut World,
+    commands: &mut Commands,
+    assets: &AssetServer,
+    global_state: &GlobalState,
+) {
+    let input = std::fs::read_to_string(format!(
+        "assets/levels/{}.level.txt",
+        global_state.current_level
+    ))
+    .unwrap();
     let mut lines = input.lines();
     let mut start = lines.next().unwrap().split(" ");
     let min_x: i32 = start.next().unwrap().parse().unwrap();
@@ -185,7 +194,7 @@ pub fn import_level(world: &mut World, commands: &mut Commands, assets: &AssetSe
     create_structure(mode, current_structure);
 }
 
-fn export_level(world: &World) {
+fn export_level(world: &World, global_state: &GlobalState) {
     let mut min = (i32::MAX, i32::MAX, i32::MAX);
     let mut max = (i32::MIN, i32::MIN, i32::MIN);
     for part in world.parts() {
@@ -222,7 +231,11 @@ fn export_level(world: &World) {
             output.push_str("\n");
         }
     }
-    std::fs::write(format!("assets/levels/{}.level.txt", LEVEL), output).unwrap();
+    std::fs::write(
+        format!("assets/levels/{}.level.txt", global_state.current_level),
+        output,
+    )
+    .unwrap();
     println!("Wrote level!");
 }
 

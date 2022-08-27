@@ -5,8 +5,9 @@ use bevy::{
 
 use crate::GameState;
 
-struct GlobalState {
-    completed: [bool; 10],
+pub struct GlobalState {
+    pub current_level: usize,
+    pub completed: [bool; 10],
 }
 
 impl GlobalState {
@@ -161,7 +162,7 @@ fn update_menu(
     mut commands: Commands,
     mut hovers: Query<&mut UiColor>,
     mut menu_state: ResMut<MenuState>,
-    global_state: Res<GlobalState>,
+    mut global_state: ResMut<GlobalState>,
     time: Res<Time>,
     windows: Res<Windows>,
     mut mouse_button_events: EventReader<MouseButtonInput>,
@@ -198,6 +199,7 @@ fn update_menu(
         {
             if mouse_pressed {
                 commands.insert_resource(ChangeToLevelRequest);
+                global_state.current_level = index;
             }
             *opacity += d;
         } else {
@@ -233,6 +235,7 @@ pub struct MenuPlugin;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(GlobalState {
+            current_level: 0,
             completed: [false; 10],
         });
         app.add_system_to_stage(CoreStage::First, set_state);

@@ -4,12 +4,12 @@ use super::{base::World, WorldSnapshot};
 use crate::{
     block::{Block, BlockFacing, BlockKind},
     interface::{import_level, EDITING},
-    structure::Structure,
+    structure::Structure, setup_menu::GlobalState,
 };
 
-pub fn setup_world(commands: &mut Commands, assets: &AssetServer) -> usize {
+pub fn setup_world(commands: &mut Commands, assets: &AssetServer, global_state: &GlobalState) -> usize {
     let mut world = World::new();
-    import_level(&mut world, commands, assets);
+    import_level(&mut world, commands, assets, global_state);
 
     let first_user_part = world.parts().len();
 

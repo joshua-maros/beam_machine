@@ -1,25 +1,25 @@
 use std::collections::VecDeque;
 
-use bevy::{
-    ecs::schedule::{ParallelExecutor, ParallelSystemExecutor},
-    prelude::*,
-    scene::{scene_spawner, scene_spawner_system},
-    utils::HashSet,
-};
+use bevy::{ecs::schedule::ParallelExecutor, prelude::*, utils::HashSet};
 
 use crate::{
     animations::Animation,
     block::{Block, BlockFacing, BlockKind},
+    interface::ChangeToMenuRequest,
+    setup::LevelEntity,
+    setup_menu::GlobalState,
     structure::{Beam, Structure},
     world::{Part, Position, World, WorldSnapshot},
-    GameState, setup::LevelEntity,
+    GameState,
 };
 
 pub struct SimulationState {
-    started: bool,
-    running: bool,
-    tick_timer: f32,
-    existing_parts: usize,
+    pub started: bool,
+    pub running: bool,
+    pub tick_timer: f32,
+    pub existing_parts: usize,
+    pub cycles: usize,
+    pub collected_outputs: usize,
 }
 
 impl SimulationState {
@@ -53,6 +53,8 @@ pub fn begin_simulation(
     snapshot.0 = world.clone();
     simulation_state.started = true;
     simulation_state.existing_parts = world.parts().len();
+    simulation_state.collected_outputs = 0;
+    simulation_state.cycles = 0;
 }
 
 pub fn end_simulation(
@@ -150,7 +152,10 @@ pub fn make_input(
     assets: &AssetServer,
 ) {
     world.add_hologram(spawns.clone(), commands, assets);
-    commands.spawn().insert(Input { spawns }).insert(LevelEntity);
+    commands
+        .spawn()
+        .insert(Input { spawns })
+        .insert(LevelEntity);
 }
 
 #[derive(Clone, Debug, Component)]
@@ -165,7 +170,10 @@ pub fn make_output(
     assets: &AssetServer,
 ) {
     world.add_hologram(accepts.clone(), commands, assets);
-    commands.spawn().insert(Output { accepts }).insert(LevelEntity);
+    commands
+        .spawn()
+        .insert(Output { accepts })
+        .insert(LevelEntity);
 }
 
 fn run_simulation(
@@ -177,6 +185,7 @@ fn run_simulation(
     mut state: ResMut<SimulationState>,
     time: Res<Time>,
     assets: Res<AssetServer>,
+    mut global_state: ResMut<GlobalState>,
 ) {
     if !state.running {
         return;
@@ -206,7 +215,14 @@ fn run_simulation(
             .position(|part| part.structure.matches(&output.accepts) && !part.is_hologram);
         if let Some(matching_part_index) = matching_part_index {
             world.remove_part(matching_part_index, &mut commands);
+            state.collected_outputs += 1;
         }
+    }
+
+    if state.collected_outputs == 10 {
+        let level = global_state.current_level;
+        global_state.completed[level] = true;
+        commands.insert_resource(ChangeToMenuRequest);
     }
 
     let parts: Vec<_> = world.parts().iter().cloned().collect();
@@ -353,21 +369,15 @@ pub struct SimulationPlugin;
 
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SimulationState {
-            started: false,
-            running: false,
-            tick_timer: 0.0,
-            existing_parts: 0,
-        });
         app.add_stage_before(
             CoreStage::PreUpdate,
             "asdf",
             SystemStage::new(Box::new(ParallelExecutor::default())),
         );
         app.add_system_set_to_stage("asdf", State::<GameState>::get_driver());
-        // app.add_system_set_to_stage(
-        //     "asdf",
-        //     SystemSet::on_update(GameState::Level).with_system(run_simulation),
-        // );
+        app.add_system_set_to_stage(
+            "asdf",
+            SystemSet::on_update(GameState::Level).with_system(run_simulation),
+        );
     }
 }
