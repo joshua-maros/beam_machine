@@ -36,11 +36,24 @@ pub fn interface_system(
     mut state: ResMut<InterfaceState>,
     simulation_state: Res<SimulationState>,
     mut world: ResMut<World>,
+    world_snapshot: Res<WorldSnapshot>,
     assets: Res<AssetServer>,
     time: Res<Time>,
+    mut global_state: ResMut<GlobalState>,
 ) {
     for event in key_events.iter() {
-        update_directional_key(&mut commands, event, &mut *state, &*simulation_state);
+        update_directional_key(
+            &mut commands,
+            event,
+            &mut *state,
+            &*simulation_state,
+            &mut *global_state,
+            if simulation_state.is_started() {
+                &world_snapshot.0
+            } else {
+                &*world
+            },
+        );
         update_block_keys(event, &mut *state, &*simulation_state);
         if event.key_code == Some(KeyCode::LShift) || event.key_code == Some(KeyCode::RShift) {
             if event.state == ButtonState::Pressed {
@@ -116,17 +129,8 @@ fn export_block(block: &Block) -> String {
     format!("{}{}", c, f)
 }
 
-pub fn import_level(
-    world: &mut World,
-    commands: &mut Commands,
-    assets: &AssetServer,
-    global_state: &GlobalState,
-) {
-    let input = std::fs::read_to_string(format!(
-        "assets/levels/{}.level.txt",
-        global_state.current_level
-    ))
-    .unwrap();
+#[must_use]
+pub fn import_level(input: &str, world: &mut World, commands: &mut Commands, assets: &AssetServer) -> usize {
     let mut lines = input.lines();
     let mut start = lines.next().unwrap().split(" ");
     let min_x: i32 = start.next().unwrap().parse().unwrap();
@@ -135,15 +139,20 @@ pub fn import_level(
     assert_eq!(lines.next(), Some("floor"));
     let mut mode = "floor";
     let mut current_structure = Structure { blocks: Vec::new() };
+    let mut first_user_part = 1;
     let mut create_structure = move |mode, structure| match mode {
         "floor" => world.add_part(structure, commands, assets),
         "input" => make_input(structure, world, commands, assets),
         "output" => make_output(structure, world, commands, assets),
+        "part" => world.add_part(structure, commands, assets),
         _ => panic!(),
     };
     let mut position = (min_x - 1, min_y, min_z);
     for line in lines {
-        if line == "input" || line == "output" {
+        if line == "input" || line == "output" || line == "part" {
+            if line != "part" {
+                first_user_part += 1;
+            }
             create_structure(mode, current_structure);
             current_structure = Structure { blocks: Vec::new() };
             mode = line;
@@ -167,7 +176,7 @@ pub fn import_level(
                         'w' => BlockKind::WelderBeamSource,
                         'l' => BlockKind::LaserSource,
                         'n' => BlockKind::LaserSensor,
-                        _ => panic!(),
+                        other => panic!("{}", other),
                     };
                     let facing = match f {
                         '0' => BlockFacing::Px,
@@ -192,9 +201,10 @@ pub fn import_level(
         }
     }
     create_structure(mode, current_structure);
+    first_user_part
 }
 
-fn export_level(world: &World, global_state: &GlobalState) {
+fn export_level(world: &World, first_user_part: usize) -> String {
     let mut min = (i32::MAX, i32::MAX, i32::MAX);
     let mut max = (i32::MIN, i32::MIN, i32::MIN);
     for part in world.parts() {
@@ -212,10 +222,12 @@ fn export_level(world: &World, global_state: &GlobalState) {
         if index == 0 {
             output.push_str(&format!("{} {} {}\n", min.0, min.1, min.2));
             output.push_str("floor\n");
-        } else if index == world.parts().len() - 1 {
+        } else if index == first_user_part - 1 {
             output.push_str("output\n");
-        } else {
+        } else if index < first_user_part {
             output.push_str("input\n");
+        } else {
+            output.push_str("part\n");
         }
         for z in min.2..=max.2 {
             for y in min.1..=max.1 {
@@ -231,12 +243,7 @@ fn export_level(world: &World, global_state: &GlobalState) {
             output.push_str("\n");
         }
     }
-    std::fs::write(
-        format!("assets/levels/{}.level.txt", global_state.current_level),
-        output,
-    )
-    .unwrap();
-    println!("Wrote level!");
+    output
 }
 
 pub fn switch_part_system(

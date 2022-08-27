@@ -2,16 +2,23 @@ use bevy::prelude::*;
 
 use super::{base::World, WorldSnapshot};
 use crate::{
-    block::{Block, BlockFacing, BlockKind},
     interface::{import_level, EDITING},
-    structure::Structure, setup_menu::GlobalState,
+    setup_menu::GlobalState,
+    structure::Structure,
 };
 
-pub fn setup_world(commands: &mut Commands, assets: &AssetServer, global_state: &GlobalState) -> usize {
+pub fn setup_world(
+    commands: &mut Commands,
+    assets: &AssetServer,
+    global_state: &GlobalState,
+) -> usize {
     let mut world = World::new();
-    import_level(&mut world, commands, assets, global_state);
-
-    let first_user_part = world.parts().len();
+    let first_user_part = import_level(
+        &global_state.levels[global_state.current_level],
+        &mut world,
+        commands,
+        assets,
+    );
 
     let blank_structure = Structure { blocks: Vec::new() };
     if !EDITING {

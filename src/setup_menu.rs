@@ -3,11 +3,12 @@ use bevy::{
     prelude::*,
 };
 
-use crate::GameState;
+use crate::{world::World, GameState};
 
 pub struct GlobalState {
     pub current_level: usize,
     pub completed: [bool; 10],
+    pub levels: Vec<String>,
 }
 
 impl GlobalState {
@@ -234,9 +235,14 @@ pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
+        let levels = (0..10)
+            .into_iter()
+            .map(|index| std::fs::read_to_string(format!("assets/levels/{}.level.txt", index)).unwrap())
+            .collect();
         app.insert_resource(GlobalState {
             current_level: 0,
             completed: [false; 10],
+            levels,
         });
         app.add_system_to_stage(CoreStage::First, set_state);
         app.add_system_set_to_stage(

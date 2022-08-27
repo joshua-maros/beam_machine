@@ -3,10 +3,14 @@ use bevy::{
     prelude::*,
 };
 
-use super::{util::directional_key_index, InterfaceState, EDITING, ChangeToMenuRequest};
+use super::{
+    export_level, util::directional_key_index, ChangeToMenuRequest, InterfaceState, EDITING,
+};
 use crate::{
     block::{BlockFacing, BlockKind},
+    setup_menu::GlobalState,
     simulation::SimulationState,
+    world::World,
 };
 
 pub(super) fn update_directional_key(
@@ -14,6 +18,8 @@ pub(super) fn update_directional_key(
     event: &KeyboardInput,
     state: &mut InterfaceState,
     simulation_state: &SimulationState,
+    global_state: &mut GlobalState,
+    world: &World,
 ) {
     if state.block_to_place.is_some() && !simulation_state.is_started() {
         state.movement_keys.fill(false);
@@ -23,6 +29,8 @@ pub(super) fn update_directional_key(
     if let Some(key) = directional_key {
         state.movement_keys[key] = event.state == ButtonState::Pressed;
     } else if event.key_code == Some(KeyCode::Escape) && event.state == ButtonState::Pressed {
+        let level = global_state.current_level;
+        global_state.levels[level] = export_level(world, state.first_user_part);
         commands.insert_resource(ChangeToMenuRequest);
     }
 }
