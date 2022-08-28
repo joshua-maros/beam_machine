@@ -12,6 +12,7 @@ use bevy::{
 };
 use bevy_mod_raycast::Intersection;
 
+pub use self::keys::exit_level;
 use self::{
     keys::{move_cameras, update_block_keys, update_directional_key},
     mouse::handle_mouse,
@@ -42,6 +43,7 @@ pub fn interface_system(
     assets: Res<AssetServer>,
     time: Res<Time>,
     mut global_state: ResMut<GlobalState>,
+    windows: Res<Windows>,
 ) {
     for event in key_events.iter() {
         update_directional_key(
@@ -66,13 +68,30 @@ pub fn interface_system(
             }
         }
     }
+    let mut clicked = false;
+    for event in mouse_button_events.iter() {
+        if event.button == MouseButton::Left && event.state == ButtonState::Pressed {
+            clicked = true;
+        }
+    }
+    let ui_captured_click = handle_ui(
+        &mut commands,
+        &mut *world,
+        &world_snapshot.0,
+        simulation_state.is_started(),
+        &mut *state,
+        &mut *global_state,
+        &*windows,
+        clicked,
+        &*assets,
+    );
     handle_mouse(
         &mut cursor,
         &mut *state,
         &*simulation_state,
         block_raycast_intersection,
         &mut commands,
-        &mut mouse_button_events,
+        clicked && !ui_captured_click,
         &mut *world,
         &*assets,
     );
@@ -81,6 +100,60 @@ pub fn interface_system(
     delete_ui(&mut commands, state.ui_root);
     let new_ui_root = make_ui(&mut commands, &*assets, &*state);
     state.ui_root = new_ui_root;
+}
+
+fn handle_ui(
+    commands: &mut Commands,
+    world: &mut World,
+    world_snapshot: &World,
+    is_started: bool,
+    state: &mut InterfaceState,
+    global_state: &mut GlobalState,
+    windows: &Windows,
+    clicked: bool,
+    assets: &AssetServer,
+) -> bool {
+    let window = windows.primary();
+    let height = window.height();
+    let cursor_pos = window
+        .cursor_position()
+        .map(|x| x * 720.0 / height)
+        .unwrap_or(Vec2::new(-1000.0, -1000.0));
+    let cep = &mut state.currently_editing_part;
+    if !clicked {
+        false
+    } else if cursor_pos.clamp((2.0, 671.0).into(), (76.0, 718.0).into()) == cursor_pos {
+        exit_level(
+            commands,
+            if is_started { world_snapshot } else { &*world },
+            state,
+            global_state,
+        );
+        true
+    } else if cursor_pos.clamp((286.0, 671.0).into(), (361.0, 718.0).into()) == cursor_pos {
+        if EDITING {
+            if *cep > 0 {
+                *cep -= 1;
+            }
+        } else {
+            *cep -= 1;
+            *cep = (*cep).max(state.first_user_part);
+        }
+        true
+    } else if cursor_pos.clamp((426.0, 671.0).into(), (505.0, 718.0).into()) == cursor_pos {
+        *cep += 1;
+        if world.parts().len() <= *cep {
+            let s = Structure { blocks: Vec::new() };
+            if EDITING {
+                world.add_hologram(s, commands, assets);
+            } else {
+                world.add_part(s, commands, assets);
+            }
+        }
+        true
+    } else {
+        false
+    }
 }
 
 pub fn simulation_interface_system(
@@ -326,7 +399,7 @@ fn make_parts_bar(commands: &mut Commands, assets: &AssetServer, state: &Interfa
         .spawn()
         .insert_bundle(NodeBundle {
             style: Style {
-                aspect_ratio: Some(926.0 / 108.0),
+                aspect_ratio: Some(1080.0 / 108.0),
                 size: Size {
                     width: Val::Auto,
                     height: Val::Percent(100.0),
@@ -377,9 +450,9 @@ fn make_parts_bar(commands: &mut Commands, assets: &AssetServer, state: &Interfa
             style: Style {
                 position: UiRect {
                     left: if part_index >= 10 {
-                        Val::Percent(69.0)
+                        Val::Percent(74.0)
                     } else {
-                        Val::Percent(72.0)
+                        Val::Percent(76.0)
                     },
                     bottom: Val::Percent(-4.0),
                     ..Default::default()

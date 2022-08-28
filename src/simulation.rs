@@ -5,7 +5,7 @@ use bevy::{ecs::schedule::ParallelExecutor, prelude::*, utils::HashSet};
 use crate::{
     animations::Animation,
     block::{Block, BlockFacing, BlockKind},
-    interface::ChangeToMenuRequest,
+    interface::{exit_level, ChangeToMenuRequest, InterfaceState},
     setup::LevelEntity,
     setup_menu::GlobalState,
     structure::{Beam, Structure},
@@ -182,10 +182,12 @@ fn run_simulation(
     outputs: Query<&Output>,
     mut beams: Query<(&mut Transform, &Beam)>,
     mut world: ResMut<World>,
+    world_snapshot: Res<WorldSnapshot>,
     mut state: ResMut<SimulationState>,
     time: Res<Time>,
     assets: Res<AssetServer>,
     mut global_state: ResMut<GlobalState>,
+    mut interface_state: ResMut<InterfaceState>,
 ) {
     if !state.running {
         return;
@@ -222,6 +224,12 @@ fn run_simulation(
     if state.collected_outputs == 10 {
         let level = global_state.current_level;
         global_state.completed[level] = true;
+        exit_level(
+            &mut commands,
+            &world_snapshot.0,
+            &mut *interface_state,
+            &mut *global_state,
+        );
         commands.insert_resource(ChangeToMenuRequest);
     }
 

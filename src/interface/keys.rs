@@ -29,10 +29,14 @@ pub(super) fn update_directional_key(
     if let Some(key) = directional_key {
         state.movement_keys[key] = event.state == ButtonState::Pressed;
     } else if event.key_code == Some(KeyCode::Escape) && event.state == ButtonState::Pressed {
+        exit_level(commands, world, state, global_state);
+    }
+}
+
+pub fn exit_level(commands: &mut Commands, world: &World, state: &mut InterfaceState, global_state: &mut GlobalState) {
         let level = global_state.current_level;
         global_state.levels[level] = export_level(world, state.first_user_part);
         commands.insert_resource(ChangeToMenuRequest);
-    }
 }
 
 pub(super) fn update_block_keys(

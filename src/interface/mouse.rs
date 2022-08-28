@@ -17,7 +17,7 @@ pub(super) fn handle_mouse(
     simulation_state: &SimulationState,
     block_raycast_intersection: Query<(&Intersection<BlockRaycastSet>,)>,
     commands: &mut Commands,
-    mouse_button_events: &mut EventReader<MouseButtonInput>,
+    clicked: bool,
     world: &mut World,
     assets: &AssetServer,
 ) {
@@ -35,7 +35,7 @@ pub(super) fn handle_mouse(
     if let Some((above_cursor, below_cursor)) = mouse_position {
         handle_mouse_events(
             commands,
-            mouse_button_events,
+            clicked,
             above_cursor,
             below_cursor,
             world,
@@ -60,31 +60,29 @@ pub(super) fn handle_mouse(
 
 fn handle_mouse_events(
     commands: &mut Commands,
-    mouse_button_events: &mut EventReader<MouseButtonInput>,
+    clicked: bool,
     above_cursor: Position,
     below_cursor: Position,
     world: &mut World,
     state: &mut InterfaceState,
     assets: &AssetServer,
 ) {
-    for event in mouse_button_events.iter() {
-        if event.button == MouseButton::Left && event.state == ButtonState::Released {
-            if let Some(block_to_place) = state.block_to_place {
-                place_block(
-                    block_to_place,
-                    state.facing,
-                    state.currently_editing_part,
-                    world,
-                    above_cursor,
-                    commands,
-                    assets,
-                );
-                if !state.holding_shift {
-                    state.block_to_place = None;
-                }
-            } else {
-                remove_block(world, below_cursor, commands, assets, &*state);
+    if clicked {
+        if let Some(block_to_place) = state.block_to_place {
+            place_block(
+                block_to_place,
+                state.facing,
+                state.currently_editing_part,
+                world,
+                above_cursor,
+                commands,
+                assets,
+            );
+            if !state.holding_shift {
+                state.block_to_place = None;
             }
+        } else {
+            remove_block(world, below_cursor, commands, assets, &*state);
         }
     }
 }
@@ -119,11 +117,7 @@ fn remove_block(
     assets: &AssetServer,
     state: &InterfaceState,
 ) {
-    let start = if EDITING {
-        0
-    } else {
-        state.first_user_part
-    };
+    let start = if EDITING { 0 } else { state.first_user_part };
     for part in start..world.parts().len() {
         world.modify_part(
             part,
