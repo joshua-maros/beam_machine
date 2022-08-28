@@ -218,13 +218,19 @@ fn setup_light(commands: &mut Commands) {
 #[derive(Component)]
 pub struct LevelEntity;
 
-fn cleanup(mut commands: Commands, entities: Query<Entity, With<LevelEntity>>) {
+fn cleanup(
+    mut commands: Commands,
+    entities: Query<Entity, With<LevelEntity>>,
+    interface_state: Res<InterfaceState>,
+) {
     commands.remove_resource::<InterfaceState>();
     commands.remove_resource::<SimulationState>();
     commands.remove_resource::<World>();
     for entity in entities.iter() {
         commands.entity(entity).despawn_recursive();
     }
+    let ui_root = interface_state.ui_root;
+    commands.entity(ui_root).despawn_recursive();
 }
 
 pub struct SetupPlugin;

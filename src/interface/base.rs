@@ -19,4 +19,5 @@ pub struct InterfaceState {
     pub holding_shift: bool,
     pub place_cursor: Entity,
     pub remove_cursor: Entity,
+    pub ui_root: Entity,
 }

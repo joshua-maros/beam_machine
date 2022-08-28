@@ -8,6 +8,7 @@ pub use base::*;
 use bevy::{
     input::{keyboard::KeyboardInput, mouse::MouseButtonInput, ButtonState},
     prelude::*,
+    ui::widget::ImageMode,
 };
 use bevy_mod_raycast::Intersection;
 
@@ -17,6 +18,7 @@ use self::{
 };
 use crate::{
     block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
+    setup::LevelEntity,
     setup_menu::GlobalState,
     simulation::{self, make_input, make_output, SimulationState},
     structure::Structure,
@@ -76,6 +78,9 @@ pub fn interface_system(
     );
 
     move_cameras(cameras.iter_mut(), state.movement_keys, &*time);
+    delete_ui(&mut commands, state.ui_root);
+    let new_ui_root = make_ui(&mut commands, &*assets, &*state);
+    state.ui_root = new_ui_root;
 }
 
 pub fn simulation_interface_system(
@@ -130,7 +135,12 @@ fn export_block(block: &Block) -> String {
 }
 
 #[must_use]
-pub fn import_level(input: &str, world: &mut World, commands: &mut Commands, assets: &AssetServer) -> usize {
+pub fn import_level(
+    input: &str,
+    world: &mut World,
+    commands: &mut Commands,
+    assets: &AssetServer,
+) -> usize {
     let mut lines = input.lines();
     let mut start = lines.next().unwrap().split(" ");
     let min_x: i32 = start.next().unwrap().parse().unwrap();
@@ -290,6 +300,126 @@ fn set_state(
         game_state.set(GameState::Menu).unwrap();
         commands.remove_resource::<ChangeToMenuRequest>();
     }
+}
+
+fn make_parts_bar(commands: &mut Commands, assets: &AssetServer, state: &InterfaceState) -> Entity {
+    let root = commands
+        .spawn()
+        .insert_bundle(NodeBundle {
+            style: Style {
+                position: UiRect {
+                    bottom: Val::Percent(93.0),
+                    left: Val::Percent(0.0),
+                    ..Default::default()
+                },
+                size: Size {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(7.0),
+                },
+                ..Default::default()
+            },
+            color: UiColor(Color::NONE),
+            ..Default::default()
+        })
+        .id();
+    let parts_label_container = commands
+        .spawn()
+        .insert_bundle(NodeBundle {
+            style: Style {
+                aspect_ratio: Some(926.0 / 108.0),
+                size: Size {
+                    width: Val::Auto,
+                    height: Val::Percent(100.0),
+                },
+                ..Default::default()
+            },
+            color: UiColor(Color::NONE),
+            ..Default::default()
+        })
+        .id();
+    commands.entity(root).add_child(parts_label_container);
+    let parts_label = commands
+        .spawn()
+        .insert_bundle(ImageBundle {
+            image: UiImage(assets.load("icons/parts.png")),
+            style: Style {
+                size: Size {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                },
+                min_size: Size {
+                    width: Val::Px(0.0),
+                    height: Val::Px(0.0),
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .id();
+    commands
+        .entity(parts_label_container)
+        .add_child(parts_label);
+    let part_index = state.currently_editing_part + 1 - state.first_user_part;
+    let parts_number = commands
+        .spawn()
+        .insert_bundle(TextBundle {
+            text: Text {
+                sections: vec![TextSection {
+                    value: format!("{}", part_index),
+                    style: TextStyle {
+                        font: assets.load("RobotoSlab-Regular.ttf"),
+                        font_size: 55.0,
+                        ..Default::default()
+                    },
+                }],
+                alignment: TextAlignment::BOTTOM_CENTER,
+            },
+            style: Style {
+                position: UiRect {
+                    left: if part_index >= 10 {
+                        Val::Percent(69.0)
+                    } else {
+                        Val::Percent(72.0)
+                    },
+                    bottom: Val::Percent(-4.0),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .id();
+    commands.entity(parts_label).add_child(parts_number);
+    root
+}
+
+pub fn make_ui(commands: &mut Commands, assets: &AssetServer, state: &InterfaceState) -> Entity {
+    let root = commands
+        .spawn()
+        .insert_bundle(NodeBundle {
+            style: Style {
+                size: Size {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                },
+                position: UiRect {
+                    bottom: Val::Percent(0.0),
+                    left: Val::Percent(0.0),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            color: UiColor(Color::NONE),
+            ..Default::default()
+        })
+        .id();
+    let parts_bar = make_parts_bar(commands, assets, state);
+    commands.entity(root).add_child(parts_bar);
+    root
+}
+
+pub fn delete_ui(commands: &mut Commands, root: Entity) {
+    commands.entity(root).despawn_recursive();
 }
 
 pub struct InterfacePlugin;

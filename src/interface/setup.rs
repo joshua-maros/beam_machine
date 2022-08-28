@@ -1,6 +1,6 @@
-use bevy::prelude::*;
+use bevy::{input::keyboard::KeyboardInput, prelude::*};
 
-use super::{Cursor, InterfaceMode, InterfaceState, EDITING};
+use super::{make_ui, Cursor, InterfaceMode, InterfaceState, EDITING};
 use crate::{block::BlockFacing, setup::LevelEntity};
 
 pub fn setup_interface_state(
@@ -28,7 +28,8 @@ pub fn setup_interface_state(
         .insert(Cursor)
         .insert(LevelEntity)
         .id();
-    commands.insert_resource(InterfaceState {
+    let ui_root = commands.spawn().insert(LevelEntity).id();
+    let mut state = InterfaceState {
         mode: InterfaceMode::Default,
         movement_keys: [false; 4],
         first_user_part,
@@ -38,5 +39,9 @@ pub fn setup_interface_state(
         holding_shift: false,
         place_cursor,
         remove_cursor,
-    });
+        ui_root,
+    };
+    let ui_root = make_ui(commands, assets, &state);
+    state.ui_root = ui_root;
+    commands.insert_resource(state);
 }
