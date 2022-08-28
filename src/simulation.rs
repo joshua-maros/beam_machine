@@ -20,6 +20,7 @@ pub struct SimulationState {
     pub existing_parts: usize,
     pub cycles: usize,
     pub collected_outputs: usize,
+    pub speed: f32,
 }
 
 impl SimulationState {
@@ -45,8 +46,10 @@ pub fn begin_simulation(
     world: &mut World,
     snapshot: &mut WorldSnapshot,
     simulation_state: &mut SimulationState,
+    speed: f32,
 ) {
     simulation_state.resume();
+    simulation_state.speed = speed;
     if simulation_state.started {
         return;
     }
@@ -192,7 +195,7 @@ fn run_simulation(
     if !state.running {
         return;
     }
-    state.tick_timer += 4.0 * time.delta_seconds();
+    state.tick_timer += 4.0 * state.speed * time.delta_seconds();
     if state.tick_timer >= 1.0 {
         // Skip excess ticks if the number is far greater than one.
         state.tick_timer = state.tick_timer % 1.0;

@@ -42,15 +42,22 @@ pub fn setup(
     );
     setup_light(&mut commands);
     let first_user_part = crate::world::setup::setup_world(&mut commands, &*assets, &*global_state);
-    crate::interface::setup::setup_interface_state(&mut commands, &*assets, first_user_part);
-    commands.insert_resource(SimulationState {
+    let sim_state = SimulationState {
         started: false,
         running: false,
         tick_timer: 0.0,
         existing_parts: 0,
         collected_outputs: 0,
         cycles: 0,
-    });
+        speed: 1.0,
+    };
+    crate::interface::setup::setup_interface_state(
+        &mut commands,
+        &*assets,
+        &sim_state,
+        first_user_part,
+    );
+    commands.insert_resource(sim_state);
 }
 
 fn setup_render_targets(

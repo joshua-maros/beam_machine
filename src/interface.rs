@@ -37,9 +37,9 @@ pub fn interface_system(
     mut key_events: EventReader<KeyboardInput>,
     mut mouse_button_events: EventReader<MouseButtonInput>,
     mut state: ResMut<InterfaceState>,
-    simulation_state: Res<SimulationState>,
+    mut simulation_state: ResMut<SimulationState>,
     mut world: ResMut<World>,
-    world_snapshot: Res<WorldSnapshot>,
+    mut world_snapshot: ResMut<WorldSnapshot>,
     assets: Res<AssetServer>,
     time: Res<Time>,
     mut global_state: ResMut<GlobalState>,
@@ -77,9 +77,10 @@ pub fn interface_system(
     let ui_captured_click = handle_ui(
         &mut commands,
         &mut *world,
-        &world_snapshot.0,
+        &mut *world_snapshot,
         simulation_state.is_started(),
         &mut *state,
+        &mut *simulation_state,
         &mut *global_state,
         &*windows,
         clicked,
@@ -98,16 +99,17 @@ pub fn interface_system(
 
     move_cameras(cameras.iter_mut(), state.movement_keys, &*time);
     delete_ui(&mut commands, state.ui_root);
-    let new_ui_root = make_ui(&mut commands, &*assets, &*state);
+    let new_ui_root = make_ui(&mut commands, &*assets, &*state, &*simulation_state);
     state.ui_root = new_ui_root;
 }
 
 fn handle_ui(
     commands: &mut Commands,
     world: &mut World,
-    world_snapshot: &World,
+    world_snapshot: &mut WorldSnapshot,
     is_started: bool,
     state: &mut InterfaceState,
+    simulation_state: &mut SimulationState,
     global_state: &mut GlobalState,
     windows: &Windows,
     clicked: bool,
@@ -125,7 +127,11 @@ fn handle_ui(
     } else if cursor_pos.clamp((2.0, 671.0).into(), (76.0, 718.0).into()) == cursor_pos {
         exit_level(
             commands,
-            if is_started { world_snapshot } else { &*world },
+            if is_started {
+                &world_snapshot.0
+            } else {
+                &*world
+            },
             state,
             global_state,
         );
@@ -150,6 +156,27 @@ fn handle_ui(
                 world.add_part(s, commands, assets);
             }
         }
+        true
+    } else if cursor_pos.clamp((6.0, 0.0).into(), (148.0, 94.0).into()) == cursor_pos {
+        state.block_to_place = Some(BlockKind::Structure);
+        true
+    } else if cursor_pos.clamp((148.0, 0.0).into(), (261.0, 94.0).into()) == cursor_pos {
+        state.block_to_place = Some(BlockKind::TractorBeamSource);
+        true
+    } else if cursor_pos.clamp((261.0, 0.0).into(), (398.0, 94.0).into()) == cursor_pos {
+        state.block_to_place = Some(BlockKind::WelderBeamSource);
+        true
+    } else if cursor_pos.clamp((33.0, 100.0).into(), (98.0, 148.0).into()) == cursor_pos {
+        simulation::end_simulation(world, world_snapshot, simulation_state, commands, assets);
+        true
+    } else if cursor_pos.clamp((98.0, 100.0).into(), (157.0, 148.0).into()) == cursor_pos {
+        simulation::begin_simulation(world, world_snapshot, simulation_state, 0.3);
+        true
+    } else if cursor_pos.clamp((157.0, 100.0).into(), (215.0, 148.0).into()) == cursor_pos {
+        simulation::begin_simulation(world, world_snapshot, simulation_state, 1.0);
+        true
+    } else if cursor_pos.clamp((215.0, 100.0).into(), (275.0, 148.0).into()) == cursor_pos {
+        simulation::begin_simulation(world, world_snapshot, simulation_state, 3.0);
         true
     } else {
         false
@@ -177,7 +204,12 @@ pub fn simulation_interface_system(
                     &*assets,
                 );
             } else {
-                simulation::begin_simulation(&mut *world, &mut *snapshot, &mut *simulation_state);
+                simulation::begin_simulation(
+                    &mut *world,
+                    &mut *snapshot,
+                    &mut *simulation_state,
+                    1.0,
+                );
             }
         }
     }
@@ -466,7 +498,101 @@ fn make_parts_bar(commands: &mut Commands, assets: &AssetServer, state: &Interfa
     root
 }
 
-pub fn make_ui(commands: &mut Commands, assets: &AssetServer, state: &InterfaceState) -> Entity {
+fn make_hotbar(
+    commands: &mut Commands,
+    assets: &AssetServer,
+    state: &InterfaceState,
+    simulation_state: &SimulationState,
+) -> Entity {
+    let root = commands
+        .spawn()
+        .insert_bundle(NodeBundle {
+            style: Style {
+                position: UiRect {
+                    bottom: Val::Percent(0.0),
+                    left: Val::Percent(0.0),
+                    ..Default::default()
+                },
+                size: Size {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(21.0),
+                },
+                position_type: PositionType::Absolute,
+                ..Default::default()
+            },
+            color: UiColor(Color::NONE),
+            ..Default::default()
+        })
+        .id();
+    let hotbar_container = commands
+        .spawn()
+        .insert_bundle(NodeBundle {
+            style: Style {
+                aspect_ratio: Some(1080.0 / 324.0),
+                size: Size {
+                    width: Val::Auto,
+                    height: Val::Percent(100.0),
+                },
+                ..Default::default()
+            },
+            color: UiColor(Color::NONE),
+            ..Default::default()
+        })
+        .id();
+    commands.entity(root).add_child(hotbar_container);
+    let parts_label = commands
+        .spawn()
+        .insert_bundle(ImageBundle {
+            image: UiImage(assets.load("icons/hotbar.png")),
+            style: Style {
+                size: Size {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                },
+                min_size: Size {
+                    width: Val::Px(0.0),
+                    height: Val::Px(0.0),
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .id();
+    commands.entity(hotbar_container).add_child(parts_label);
+    let parts_number = commands
+        .spawn()
+        .insert_bundle(TextBundle {
+            text: Text {
+                sections: vec![TextSection {
+                    value: format!("{}/10", simulation_state.collected_outputs),
+                    style: TextStyle {
+                        font: assets.load("RobotoSlab-Regular.ttf"),
+                        font_size: 55.0,
+                        ..Default::default()
+                    },
+                }],
+                alignment: TextAlignment::BOTTOM_CENTER,
+            },
+            style: Style {
+                position: UiRect {
+                    left: Val::Percent(58.0),
+                    bottom: Val::Percent(65.0),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .id();
+    commands.entity(parts_label).add_child(parts_number);
+    root
+}
+pub fn make_ui(
+    commands: &mut Commands,
+    assets: &AssetServer,
+    state: &InterfaceState,
+    simulation_state: &SimulationState,
+) -> Entity {
     let root = commands
         .spawn()
         .insert_bundle(NodeBundle {
@@ -488,6 +614,8 @@ pub fn make_ui(commands: &mut Commands, assets: &AssetServer, state: &InterfaceS
         .id();
     let parts_bar = make_parts_bar(commands, assets, state);
     commands.entity(root).add_child(parts_bar);
+    let hotbar = make_hotbar(commands, assets, state, simulation_state);
+    commands.entity(root).add_child(hotbar);
     root
 }
 
