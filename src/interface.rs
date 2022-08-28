@@ -99,7 +99,13 @@ pub fn interface_system(
 
     move_cameras(cameras.iter_mut(), state.movement_keys, &*time);
     delete_ui(&mut commands, state.ui_root);
-    let new_ui_root = make_ui(&mut commands, &*assets, &*state, &*simulation_state);
+    let new_ui_root = make_ui(
+        &mut commands,
+        &*assets,
+        &*state,
+        &*simulation_state,
+        &*global_state,
+    );
     state.ui_root = new_ui_root;
 }
 
@@ -587,11 +593,96 @@ fn make_hotbar(
     commands.entity(parts_label).add_child(parts_number);
     root
 }
+
+fn make_hint_box(
+    commands: &mut Commands,
+    assets: &AssetServer,
+    state: &InterfaceState,
+    global_state: &GlobalState,
+    simulation_state: &SimulationState,
+) -> Entity {
+    let root = commands
+        .spawn()
+        .insert_bundle(NodeBundle {
+            style: Style {
+                position: UiRect {
+                    bottom: Val::Percent(25.0),
+                    left: Val::Percent(70.0),
+                    ..Default::default()
+                },
+                size: Size {
+                    width: Val::Percent(30.0),
+                    height: Val::Percent(50.0),
+                },
+                position_type: PositionType::Absolute,
+                ..Default::default()
+            },
+            color: UiColor(Color::NONE),
+            ..Default::default()
+        })
+        .id();
+    let hint_text = match global_state.current_level {
+        0 => "The goal of this game is to take\nthe inputs (on the blue squares)\nand turn them into the outputs \n(on the red squares).\n\nPlace a tractor beam to do so.\nPress play once you are ready to \nsimulate the machine you built.",
+        1 => "Use WASD to look around.\n\nGravity is stronger than tractor \nbeams. Use structure blocks to \nbridge the gap. Make sure all \nthe blocks are in the same part, \nor they will separate!\n\nHold shift to place multiple \nblocks at a time.",
+        2 => "Welder beams attach adjacent \nblocks together.\n\nUse QWEASD to change the \norientation of what you're \nplacing.",
+        3 => "If multiple tractor beams are \npulling an object, the beam that \nis the longest will win out.",
+        5 => "Tractor beams can only pull a \nsingle part at a time, but moving \nparts can push multiple parts\nat a time.",
+        _ => "",
+    };
+    if hint_text.is_empty() {
+        return root;
+    }
+    let hint_container = commands
+        .spawn()
+        .insert_bundle(NodeBundle {
+            style: Style {
+                size: Size {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                },
+                ..Default::default()
+            },
+            color: UiColor(Color::rgba(0.0, 0.0, 0.0, 0.5)),
+            ..Default::default()
+        })
+        .id();
+    commands.entity(root).add_child(hint_container);
+    let hint = commands
+        .spawn()
+        .insert_bundle(TextBundle {
+            text: Text {
+                sections: vec![TextSection {
+                    value: hint_text.to_owned(),
+                    style: TextStyle {
+                        font: assets.load("RobotoSlab-Regular.ttf"),
+                        font_size: 30.0,
+                        ..Default::default()
+                    },
+                }],
+                alignment: TextAlignment::BOTTOM_LEFT,
+            },
+            style: Style {
+                position: UiRect {
+                    left: Val::Percent(5.0),
+                    bottom: Val::Percent(5.0),
+                    // right: Val::Percent(100.0),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .id();
+    commands.entity(hint_container).add_child(hint);
+    root
+}
+
 pub fn make_ui(
     commands: &mut Commands,
     assets: &AssetServer,
     state: &InterfaceState,
     simulation_state: &SimulationState,
+    global_state: &GlobalState,
 ) -> Entity {
     let root = commands
         .spawn()
@@ -616,6 +707,8 @@ pub fn make_ui(
     commands.entity(root).add_child(parts_bar);
     let hotbar = make_hotbar(commands, assets, state, simulation_state);
     commands.entity(root).add_child(hotbar);
+    let hint_box = make_hint_box(commands, assets, state, global_state, simulation_state);
+    commands.entity(root).add_child(hint_box);
     root
 }
 

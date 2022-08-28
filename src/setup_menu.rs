@@ -241,7 +241,7 @@ impl Plugin for MenuPlugin {
             .collect();
         app.insert_resource(GlobalState {
             current_level: 0,
-            completed: [false; 10],
+            completed: [true; 10],
             levels,
         });
         app.add_system_to_stage(CoreStage::First, set_state);

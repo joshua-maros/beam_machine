@@ -1,13 +1,14 @@
 use bevy::{input::keyboard::KeyboardInput, prelude::*};
 
 use super::{make_ui, Cursor, InterfaceMode, InterfaceState, EDITING};
-use crate::{block::BlockFacing, setup::LevelEntity, simulation::SimulationState};
+use crate::{block::BlockFacing, setup::LevelEntity, simulation::SimulationState, setup_menu::GlobalState};
 
 pub fn setup_interface_state(
     commands: &mut Commands,
     assets: &AssetServer,
     simulation_state: &SimulationState,
     first_user_part: usize,
+    global_state: &GlobalState,
 ) {
     let scene = assets.load("blocks/cursor.glb#Scene0");
     let place_cursor = commands
@@ -36,13 +37,13 @@ pub fn setup_interface_state(
         first_user_part,
         currently_editing_part: if EDITING { 0 } else { first_user_part },
         block_to_place: None,
-        facing: BlockFacing::Px,
+        facing: BlockFacing::Nx,
         holding_shift: false,
         place_cursor,
         remove_cursor,
         ui_root,
     };
-    let ui_root = make_ui(commands, assets, &state, simulation_state);
+    let ui_root = make_ui(commands, assets, &state, simulation_state, global_state);
     state.ui_root = ui_root;
     commands.insert_resource(state);
 }

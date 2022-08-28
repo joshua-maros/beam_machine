@@ -56,6 +56,7 @@ pub fn setup(
         &*assets,
         &sim_state,
         first_user_part,
+        &*global_state,
     );
     commands.insert_resource(sim_state);
 }
