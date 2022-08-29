@@ -202,6 +202,7 @@ fn run_simulation(
     if state.tick_timer >= 1.0 {
         // Skip excess ticks if the number is far greater than one.
         state.tick_timer = state.tick_timer % 1.0;
+        state.cycles += 1;
     } else {
         return;
     }
@@ -229,7 +230,16 @@ fn run_simulation(
 
     if state.collected_outputs == 10 {
         let level = global_state.current_level;
-        global_state.completed[level] = true;
+        let mut num_blocks = 0;
+        for part in &world.parts()[interface_state.first_user_part..state.existing_parts] {
+            num_blocks += part.structure.blocks.len();
+        }
+        let (gs_cycles, gs_num_blocks, gs_parts) =
+            global_state.completed[level].get_or_insert((u32::MAX, u32::MAX, u32::MAX));
+        *gs_cycles = (*gs_cycles).min(state.cycles as u32 - 1);
+        *gs_num_blocks = (*gs_num_blocks).min(num_blocks as u32);
+        *gs_parts =
+            (*gs_parts).min((state.existing_parts - interface_state.first_user_part) as u32);
         exit_level(
             &mut commands,
             &world_snapshot.0,

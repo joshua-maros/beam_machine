@@ -3,11 +3,14 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{world::World, GameState};
+use crate::{
+    world::{Position, World},
+    GameState,
+};
 
 pub struct GlobalState {
     pub current_level: usize,
-    pub completed: [bool; 10],
+    pub completed: [Option<(u32, u32, u32)>; 10],
     pub levels: Vec<String>,
 }
 
@@ -26,7 +29,9 @@ impl GlobalState {
             9 => vec![7],
             _ => panic!(),
         };
-        requirements.iter().all(|&req| self.completed[req])
+        requirements
+            .iter()
+            .all(|&req| self.completed[req].is_some())
     }
 }
 
@@ -121,6 +126,74 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>, global_state: Res<Glo
             .id();
         commands.entity(root).add_child(ent);
         state.hovers.push((ent, 0.0));
+        if let Some((cycles, blocks, parts)) = global_state.completed[index] {
+            let pos = [
+                (19.0, 77.0),
+                (15.5, 51.5),
+                (39.5, 75.0),
+                (36.0, 49.5),
+                (60.5, 73.0),
+                (57.0, 47.5),
+                (81.0, 71.0),
+                (78.0, 45.5),
+                (74.5, 20.0),
+                (92.0, 25.0),
+            ][index];
+            let ent = commands
+                .spawn()
+                .insert_bundle(TextBundle {
+                    text: Text {
+                        sections: vec![TextSection {
+                            value: format!("{}c\n{}b\n{}p", cycles, blocks, parts),
+                            style: TextStyle {
+                                font: assets.load("RobotoSlab-Regular.ttf"),
+                                font_size: 30.0,
+                                color: Color::BLACK,
+                            },
+                        }],
+                        ..Default::default()
+                    },
+                    style: Style {
+                        position: UiRect {
+                            left: Val::Percent(pos.0),
+                            bottom: Val::Percent(pos.1),
+                            ..Default::default()
+                        },
+                        position_type: PositionType::Absolute,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .id();
+            commands.entity(root).add_child(ent);
+            let ent = commands
+                .spawn()
+                .insert_bundle(TextBundle {
+                    text: Text {
+                        sections: vec![TextSection {
+                            value: format!("{}c\n{}b\n{}p", cycles, blocks, parts),
+                            style: TextStyle {
+                                font: assets.load("RobotoSlab-Regular.ttf"),
+                                font_size: 30.0,
+                                color: Color::ORANGE_RED,
+                            },
+                        }],
+                        ..Default::default()
+                    },
+                    style: Style {
+                        position: UiRect {
+                            left: Val::Percent(pos.0),
+                            bottom: Val::Percent(pos.1),
+                            ..Default::default()
+                        },
+                        position_type: PositionType::Absolute,
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                })
+                .id();
+            commands.entity(root).add_child(ent);
+        }
     }
     for index in 1..10 {
         if global_state.unlocked(index) {
@@ -237,11 +310,13 @@ impl Plugin for MenuPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         let levels = (0..10)
             .into_iter()
-            .map(|index| std::fs::read_to_string(format!("assets/levels/{}.level.txt", index)).unwrap())
+            .map(|index| {
+                std::fs::read_to_string(format!("assets/levels/{}.level.txt", index)).unwrap()
+            })
             .collect();
         app.insert_resource(GlobalState {
             current_level: 0,
-            completed: [true; 10],
+            completed: [None; 10],
             levels,
         });
         app.add_system_to_stage(CoreStage::First, set_state);

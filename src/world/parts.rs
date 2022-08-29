@@ -140,7 +140,6 @@ impl World {
                 self.split_part(part, commands, assets);
             }
         }
-        // self.refresh_all_parts(commands, assets);
     }
 
     pub fn remove_part(&mut self, index: usize, commands: &mut Commands) -> Part {
