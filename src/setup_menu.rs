@@ -313,12 +313,19 @@ pub struct MenuPlugin;
 
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        let levels = (0..10)
-            .into_iter()
-            .map(|index| {
-                std::fs::read_to_string(format!("assets/levels/{}.level.txt", index)).unwrap()
-            })
-            .collect();
+        let levels = [
+            include_str!("../assets/levels/0.level.txt"),
+            include_str!("../assets/levels/1.level.txt"),
+            include_str!("../assets/levels/2.level.txt"),
+            include_str!("../assets/levels/3.level.txt"),
+            include_str!("../assets/levels/4.level.txt"),
+            include_str!("../assets/levels/5.level.txt"),
+            include_str!("../assets/levels/6.level.txt"),
+            include_str!("../assets/levels/7.level.txt"),
+            include_str!("../assets/levels/8.level.txt"),
+            include_str!("../assets/levels/9.level.txt"),
+        ];
+        let levels = levels.iter().copied().map(str::to_owned).collect();
         app.insert_resource(GlobalState {
             current_level: 0,
             last: [None; 10],
