@@ -10,6 +10,7 @@ use crate::{
 
 pub struct GlobalState {
     pub current_level: usize,
+    pub last: [Option<(u32, u32, u32)>; 10],
     pub completed: [Option<(u32, u32, u32)>; 10],
     pub levels: Vec<String>,
 }
@@ -175,7 +176,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>, global_state: Res<Glo
                             style: TextStyle {
                                 font: assets.load("RobotoSlab-Regular.ttf"),
                                 font_size: 30.0,
-                                color: Color::ORANGE_RED,
+                                color: Color::hex("E9C46A").unwrap(),
                             },
                         }],
                         ..Default::default()
@@ -316,6 +317,7 @@ impl Plugin for MenuPlugin {
             .collect();
         app.insert_resource(GlobalState {
             current_level: 0,
+            last: [None; 10],
             completed: [None; 10],
             levels,
         });

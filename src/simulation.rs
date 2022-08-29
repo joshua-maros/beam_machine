@@ -5,12 +5,12 @@ use bevy::{ecs::schedule::ParallelExecutor, prelude::*, utils::HashSet};
 use crate::{
     animations::Animation,
     block::{Block, BlockFacing, BlockKind},
-    interface::{exit_level, ChangeToMenuRequest, InterfaceState},
+    interface::{exit_level, ChangeToCompleteRequest, InterfaceState},
     setup::LevelEntity,
     setup_menu::GlobalState,
     structure::{Beam, Structure},
     world::{Part, Position, World, WorldSnapshot},
-    GameState,
+    GameState, Sfx,
 };
 
 pub struct SimulationState {
@@ -194,6 +194,8 @@ fn run_simulation(
     assets: Res<AssetServer>,
     mut global_state: ResMut<GlobalState>,
     mut interface_state: ResMut<InterfaceState>,
+    sfx: Res<Sfx>,
+    audio: Res<Audio>,
 ) {
     if !state.running {
         return;
@@ -225,6 +227,9 @@ fn run_simulation(
         if let Some(matching_part_index) = matching_part_index {
             world.remove_part(matching_part_index, &mut commands);
             state.collected_outputs += 1;
+            if state.collected_outputs < 10 {
+                audio.play_with_settings(sfx.ding.clone(), PlaybackSettings::ONCE.with_volume(0.5));
+            }
         }
     }
 
@@ -234,6 +239,11 @@ fn run_simulation(
         for part in &world.parts()[interface_state.first_user_part..state.existing_parts] {
             num_blocks += part.structure.blocks.len();
         }
+        global_state.last[level] = Some((
+            state.cycles as u32 - 1,
+            num_blocks as u32,
+            (state.existing_parts - interface_state.first_user_part) as u32,
+        ));
         let (gs_cycles, gs_num_blocks, gs_parts) =
             global_state.completed[level].get_or_insert((u32::MAX, u32::MAX, u32::MAX));
         *gs_cycles = (*gs_cycles).min(state.cycles as u32 - 1);
@@ -245,8 +255,13 @@ fn run_simulation(
             &world_snapshot.0,
             &mut *interface_state,
             &mut *global_state,
+            true,
         );
-        commands.insert_resource(ChangeToMenuRequest);
+        commands.insert_resource(ChangeToCompleteRequest);
+        audio.play_with_settings(
+            sfx.level_complete.clone(),
+            PlaybackSettings::ONCE.with_volume(0.5),
+        );
     }
 
     let parts: Vec<_> = world.parts().iter().cloned().collect();

@@ -10,6 +10,7 @@ use crate::{
     simulation::SimulationState,
     structure::Structure,
     world::{Position, World},
+    Sfx,
 };
 
 pub(super) fn handle_mouse(
@@ -21,6 +22,8 @@ pub(super) fn handle_mouse(
     clicked: bool,
     world: &mut World,
     assets: &AssetServer,
+    sfx: &Sfx,
+    audio: &Audio,
 ) {
     let [(_, mut place_cursor_visibility), (_, mut remove_cursor_visibility)] = cursor
         .get_many_mut([state.place_cursor, state.remove_cursor])
@@ -42,6 +45,8 @@ pub(super) fn handle_mouse(
             world,
             state,
             assets,
+            sfx,
+            audio,
         );
 
         for (mut cursor_transform, _) in cursor.iter_mut() {
@@ -67,6 +72,8 @@ fn handle_mouse_events(
     world: &mut World,
     state: &mut InterfaceState,
     assets: &AssetServer,
+    sfx: &Sfx,
+    audio: &Audio,
 ) {
     if clicked {
         if let Some(block_to_place) = state.block_to_place {
@@ -78,12 +85,14 @@ fn handle_mouse_events(
                 above_cursor,
                 commands,
                 assets,
+                sfx,
+                audio,
             );
             if !state.holding_shift {
                 state.block_to_place = None;
             }
         } else {
-            remove_block(world, below_cursor, commands, assets, &*state);
+            remove_block(world, below_cursor, commands, assets, &*state, sfx, audio);
         }
     }
 }
@@ -96,7 +105,19 @@ fn place_block(
     above_cursor: (i32, i32, i32),
     commands: &mut Commands,
     assets: &AssetServer,
+    sfx: &Sfx,
+    audio: &Audio,
 ) {
+    let index = match kind {
+        BlockKind::Structure => 0,
+        BlockKind::TractorBeamSource => 1,
+        BlockKind::WelderBeamSource => 2,
+        _ => 0,
+    };
+    audio.play_with_settings(
+        sfx.place[index].clone(),
+        PlaybackSettings::ONCE.with_volume(0.3),
+    );
     world.modify_part(
         *part_index,
         |part| {
@@ -117,6 +138,8 @@ fn remove_block(
     commands: &mut Commands,
     assets: &AssetServer,
     state: &InterfaceState,
+    sfx: &Sfx,
+    audio: &Audio,
 ) {
     let start = if EDITING { 0 } else { state.first_user_part };
     for part in start..world.parts().len() {
@@ -127,4 +150,5 @@ fn remove_block(
             assets,
         );
     }
+    audio.play_with_settings(sfx.click.clone(), PlaybackSettings::ONCE.with_volume(0.3));
 }

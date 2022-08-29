@@ -24,7 +24,7 @@ use crate::{
     simulation::{self, make_input, make_output, SimulationState},
     structure::Structure,
     world::{World, WorldSnapshot},
-    GameState,
+    GameState, Sfx,
 };
 
 pub const EDITING: bool = false;
@@ -44,6 +44,8 @@ pub fn interface_system(
     time: Res<Time>,
     mut global_state: ResMut<GlobalState>,
     windows: Res<Windows>,
+    sfx: Res<Sfx>,
+    audio: Res<Audio>,
 ) {
     for event in key_events.iter() {
         update_directional_key(
@@ -95,6 +97,8 @@ pub fn interface_system(
         clicked && !ui_captured_click,
         &mut *world,
         &*assets,
+        &*sfx,
+        &*audio,
     );
 
     move_cameras(cameras.iter_mut(), state.movement_keys, &*time);
@@ -140,6 +144,7 @@ fn handle_ui(
             },
             state,
             global_state,
+            false,
         );
         true
     } else if cursor_pos.clamp((286.0, 671.0).into(), (361.0, 718.0).into()) == cursor_pos {
@@ -423,16 +428,16 @@ pub fn switch_part_system(
     }
 }
 
-pub struct ChangeToMenuRequest;
+pub struct ChangeToCompleteRequest;
 
 fn set_state(
     mut commands: Commands,
-    request: Option<Res<ChangeToMenuRequest>>,
+    request: Option<Res<ChangeToCompleteRequest>>,
     mut game_state: ResMut<State<GameState>>,
 ) {
     if request.is_some() {
-        game_state.set(GameState::Menu).unwrap();
-        commands.remove_resource::<ChangeToMenuRequest>();
+        game_state.set(GameState::Complete).unwrap();
+        commands.remove_resource::<ChangeToCompleteRequest>();
     }
 }
 

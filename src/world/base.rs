@@ -24,7 +24,7 @@ impl World {
             if part.is_hologram {
                 continue;
             }
-            part.structure.debug_assert_invariants();
+            // part.structure.debug_assert_invariants();
             for block in &part.structure.blocks {
                 if positions.contains(&block.position) {
                     println!(
