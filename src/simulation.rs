@@ -47,6 +47,8 @@ pub fn begin_simulation(
     snapshot: &mut WorldSnapshot,
     simulation_state: &mut SimulationState,
     speed: f32,
+    commands: &mut Commands,
+    assets: &AssetServer,
 ) {
     simulation_state.resume();
     simulation_state.speed = speed;
@@ -54,6 +56,7 @@ pub fn begin_simulation(
         return;
     }
     snapshot.0 = world.clone();
+    world.split_loose_parts(commands, assets);
     simulation_state.started = true;
     simulation_state.existing_parts = world.parts().len();
     simulation_state.collected_outputs = 0;

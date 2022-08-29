@@ -176,13 +176,34 @@ fn handle_ui(
         simulation::end_simulation(world, world_snapshot, simulation_state, commands, assets);
         true
     } else if cursor_pos.clamp((98.0, 100.0).into(), (157.0, 148.0).into()) == cursor_pos {
-        simulation::begin_simulation(world, world_snapshot, simulation_state, 0.3);
+        simulation::begin_simulation(
+            world,
+            world_snapshot,
+            simulation_state,
+            0.3,
+            commands,
+            assets,
+        );
         true
     } else if cursor_pos.clamp((157.0, 100.0).into(), (215.0, 148.0).into()) == cursor_pos {
-        simulation::begin_simulation(world, world_snapshot, simulation_state, 1.0);
+        simulation::begin_simulation(
+            world,
+            world_snapshot,
+            simulation_state,
+            1.0,
+            commands,
+            assets,
+        );
         true
     } else if cursor_pos.clamp((215.0, 100.0).into(), (275.0, 148.0).into()) == cursor_pos {
-        simulation::begin_simulation(world, world_snapshot, simulation_state, 3.0);
+        simulation::begin_simulation(
+            world,
+            world_snapshot,
+            simulation_state,
+            3.0,
+            commands,
+            assets,
+        );
         true
     } else {
         false
@@ -215,6 +236,8 @@ pub fn simulation_interface_system(
                     &mut *snapshot,
                     &mut *simulation_state,
                     1.0,
+                    &mut commands,
+                    &*assets,
                 );
             }
         }

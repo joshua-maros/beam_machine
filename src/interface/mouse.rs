@@ -8,6 +8,7 @@ use super::{util::get_mouse_position_in_world, Cursor, InterfaceState, EDITING};
 use crate::{
     block::{Block, BlockFacing, BlockKind, BlockRaycastSet},
     simulation::SimulationState,
+    structure::Structure,
     world::{Position, World},
 };
 
@@ -72,7 +73,7 @@ fn handle_mouse_events(
             place_block(
                 block_to_place,
                 state.facing,
-                state.currently_editing_part,
+                &mut state.currently_editing_part,
                 world,
                 above_cursor,
                 commands,
@@ -90,14 +91,14 @@ fn handle_mouse_events(
 fn place_block(
     kind: BlockKind,
     facing: BlockFacing,
-    part: usize,
+    part_index: &mut usize,
     world: &mut World,
     above_cursor: (i32, i32, i32),
     commands: &mut Commands,
     assets: &AssetServer,
 ) {
     world.modify_part(
-        part,
+        *part_index,
         |part| {
             part.blocks.push(Block {
                 facing,

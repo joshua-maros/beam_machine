@@ -1,9 +1,10 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashSet};
 
-use super::{Part, World};
+use super::{Part, Position, World};
 use crate::{
     animations::Animation,
-    structure::{spawn_structure, Structure}, setup::LevelEntity,
+    setup::LevelEntity,
+    structure::{spawn_structure, Structure},
 };
 
 impl World {
@@ -77,6 +78,69 @@ impl World {
                 .collect(),
         };
         self.add_part(new_structure, commands, assets);
+    }
+
+    fn neighbors(of: Position, into: &mut HashSet<Position>, list: &mut Vec<Position>) {
+        for pos in [
+            (of.0 + 1, of.1, of.2),
+            (of.0 - 1, of.1, of.2),
+            (of.0, of.1 + 1, of.2),
+            (of.0, of.1 - 1, of.2),
+            (of.0, of.1, of.2 + 1),
+            (of.0, of.1, of.2 - 1),
+        ]
+        .into_iter()
+        {
+            if into.insert(pos) {
+                list.push(pos);
+            }
+        }
+    }
+
+    fn split_part(&mut self, mut part: Part, commands: &mut Commands, assets: &AssetServer) {
+        let mut indices = Vec::new();
+        let mut positions = HashSet::new();
+        let mut positions_list = Vec::new();
+        let blocks = &mut part.structure.blocks;
+        while blocks.len() > 0 {
+            Self::neighbors(blocks[0].position, &mut positions, &mut positions_list);
+            positions.insert(blocks[0].position);
+            indices.push(0);
+            while let Some(position) = positions_list.pop() {
+                if let Some(index) = blocks.iter().position(|x| x.position == position) {
+                    Self::neighbors(position, &mut positions, &mut positions_list);
+                    indices.push(index);
+                }
+            }
+            indices.sort();
+            let mut extracted_blocks = Vec::new();
+            for index in indices.into_iter().rev() {
+                extracted_blocks.push(blocks.swap_remove(index));
+            }
+            self.add_part(
+                Structure {
+                    blocks: extracted_blocks,
+                },
+                commands,
+                assets,
+            );
+            indices = Vec::new();
+        }
+    }
+
+    pub fn split_loose_parts(&mut self, commands: &mut Commands, assets: &AssetServer) {
+        let mut parts = std::mem::take(&mut self.parts);
+        // Retain the floor as the first part.
+        self.parts.push(parts.remove(0));
+        for part in parts {
+            commands.entity(part.physical_instance).despawn_recursive();
+            if part.is_hologram {
+                self.add_hologram(part.structure, commands, assets);
+            } else {
+                self.split_part(part, commands, assets);
+            }
+        }
+        // self.refresh_all_parts(commands, assets);
     }
 
     pub fn remove_part(&mut self, index: usize, commands: &mut Commands) -> Part {
