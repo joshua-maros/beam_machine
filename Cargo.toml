@@ -6,7 +6,8 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = {version = "0.8.0", features = ["dynamic"]}
+# bevy = {version = "0.8.0", features = ["dynamic"]}
+bevy = {version = "0.8.0"}
 bevy_mod_raycast = "0.6.0"
 bevy_obj = "0.8.0"
 rand = "0.8.5"
@@ -15,4 +16,4 @@ rand = "0.8.5"
 opt-level = 3
 
 [patch.crates-io]
-wgpu = { git = "https://github.com/mockersf/wgpu/", branch = "unconditional-clear-workaround" }
+wgpu = {git = "https://github.com/mockersf/wgpu/", branch = "unconditional-clear-workaround"}
