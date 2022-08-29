@@ -37,7 +37,12 @@ pub struct Sfx {
     pub place: [Handle<AudioSource>; 3],
 }
 
-fn setup_music(mut commands: Commands, assets: Res<AssetServer>, audio: Res<Audio>) {
+fn setup_music(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    audio: Res<Audio>,
+    mut windows: ResMut<Windows>,
+) {
     let music = assets.load("music.ogg");
     audio.play_with_settings(music, PlaybackSettings::LOOP.with_volume(0.3));
     commands.insert_resource(Sfx {
@@ -50,6 +55,7 @@ fn setup_music(mut commands: Commands, assets: Res<AssetServer>, audio: Res<Audi
             assets.load("place3.ogg"),
         ],
     });
+    windows.primary_mut().set_scale_factor_override(Some(1.0));
 }
 
 fn main() {
