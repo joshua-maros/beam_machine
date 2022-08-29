@@ -222,8 +222,12 @@ pub fn simulation_interface_system(
     mut world: ResMut<World>,
     mut snapshot: ResMut<WorldSnapshot>,
     assets: Res<AssetServer>,
+    interface_state: Res<InterfaceState>,
 ) {
     for event in key_events.iter() {
+        if event.key_code == Some(KeyCode::Tab) && event.state == ButtonState::Pressed {
+            println!("{}", export_level(&*world, interface_state.first_user_part));
+        }
         if event.key_code == Some(KeyCode::Space) && event.state == ButtonState::Pressed {
             if EDITING {
                 // export_level(&*world);

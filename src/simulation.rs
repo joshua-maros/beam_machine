@@ -219,20 +219,6 @@ fn run_simulation(
         }
     }
 
-    for output in outputs.iter() {
-        let parts = world.parts();
-        let matching_part_index = parts
-            .iter()
-            .position(|part| part.structure.matches(&output.accepts) && !part.is_hologram);
-        if let Some(matching_part_index) = matching_part_index {
-            world.remove_part(matching_part_index, &mut commands);
-            state.collected_outputs += 1;
-            if state.collected_outputs < 10 {
-                audio.play_with_settings(sfx.ding.clone(), PlaybackSettings::ONCE.with_volume(0.5));
-            }
-        }
-    }
-
     if state.collected_outputs == 10 {
         let level = global_state.current_level;
         let mut num_blocks = 0;
@@ -293,6 +279,20 @@ fn run_simulation(
                     world.merge_parts(intersects.iter().copied(), &mut commands, &*assets);
                 }
                 intersects.clear();
+            }
+        }
+    }
+
+    for output in outputs.iter() {
+        let parts = world.parts();
+        let matching_part_index = parts
+            .iter()
+            .position(|part| part.structure.matches(&output.accepts) && !part.is_hologram);
+        if let Some(matching_part_index) = matching_part_index {
+            world.remove_part(matching_part_index, &mut commands);
+            state.collected_outputs += 1;
+            if state.collected_outputs < 10 {
+                audio.play_with_settings(sfx.ding.clone(), PlaybackSettings::ONCE.with_volume(0.5));
             }
         }
     }
