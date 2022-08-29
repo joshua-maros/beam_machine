@@ -5,7 +5,7 @@ use bevy::{
 
 use crate::{
     world::{Position, World},
-    GameState,
+    GameState, Sfx,
 };
 
 pub struct GlobalState {
@@ -241,6 +241,8 @@ fn update_menu(
     time: Res<Time>,
     windows: Res<Windows>,
     mut mouse_button_events: EventReader<MouseButtonInput>,
+    sfx: Res<Sfx>,
+    audio: Res<Audio>,
 ) {
     let d = time.delta_seconds() * 4.0;
     let win = windows.get_primary().unwrap();
@@ -275,6 +277,8 @@ fn update_menu(
             if mouse_pressed {
                 commands.insert_resource(ChangeToLevelRequest);
                 global_state.current_level = index;
+                audio
+                    .play_with_settings(sfx.click.clone(), PlaybackSettings::ONCE.with_volume(0.3));
             }
             *opacity += d;
         } else {

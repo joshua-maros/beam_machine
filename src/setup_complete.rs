@@ -7,7 +7,7 @@ use rand::{seq::SliceRandom, thread_rng, Rng};
 use crate::{
     setup_menu::GlobalState,
     world::{Position, World},
-    GameState,
+    GameState, Sfx,
 };
 
 #[derive(Component)]
@@ -166,7 +166,7 @@ fn setup(mut commands: Commands, assets: Res<AssetServer>, global_state: Res<Glo
         let e = commands
             .spawn()
             .insert(Confetti {
-                pos: Vec2::new(if i % 2 == 0 { 10.0 } else { 90.0 }, 0.0),
+                pos: Vec2::new(if i % 2 == 0 { 10.0 } else { 90.0 }, -80.0),
                 vel: Vec2::new(
                     thread_rng().gen_range(-20.0..20.0),
                     thread_rng().gen_range(120.0..200.0),
@@ -204,9 +204,11 @@ fn simulate_confetti(
     time: Res<Time>,
     mut key_events: EventReader<KeyboardInput>,
     mut mouse_events: EventReader<MouseButtonInput>,
+    sfx: Res<Sfx>,
+    audio: Res<Audio>,
 ) {
     for (mut style, mut confetti) in confetti.iter_mut() {
-        let dx = confetti.vel * time.delta_seconds();
+        let dx = confetti.vel * time.delta_seconds() * 2.0;
         confetti.pos += dx;
         let dv = 1.0 - time.delta_seconds().clamp(0.0, 0.2) * confetti.mass;
         confetti.vel.y -= 10.0 * time.delta_seconds();
@@ -217,6 +219,7 @@ fn simulate_confetti(
     if key_events.iter().any(|e| e.state == ButtonState::Pressed)
         || mouse_events.iter().any(|e| e.state == ButtonState::Pressed)
     {
+        audio.play_with_settings(sfx.click.clone(), PlaybackSettings::ONCE.with_volume(0.3));
         commands.insert_resource(ChangeToMenuRequest);
     }
 }

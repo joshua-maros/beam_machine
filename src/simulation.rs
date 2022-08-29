@@ -260,7 +260,7 @@ fn run_simulation(
         commands.insert_resource(ChangeToCompleteRequest);
         audio.play_with_settings(
             sfx.level_complete.clone(),
-            PlaybackSettings::ONCE.with_volume(0.5),
+            PlaybackSettings::ONCE.with_volume(0.3),
         );
     }
 
